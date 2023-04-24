@@ -9,6 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Main Page {.tabset .tabset-fade}
+
+### tab Cleaning 
+
 Cleaning the data is an important first step to any analysis. In this case, the data we are using comes from GPS collars. This means there are rows within the raw data that are not usable. This can be due to the collar not collecting a location or collecting an inaccurate location. It is important to remove all rows with no data and with inaccurate data (determined here by the dilution measurement). In addition, the time the bears were in the den are removed. This will ensure that we are not extracting habitat use from a time when the bears are not actively changing resource use. We also wanted to convert the time of the GPS fixes from UTC to standard time. This will be more consistent with GIS layers. Seasons were decided on general habitat condition changes like food availability. Seasons were then added to the data in order to conduct seasonal analysis later on. Once the data are cleaned, it is important to have uniform structure to be able to use the data later on.
 
 Set Paths
