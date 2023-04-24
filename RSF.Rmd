@@ -9,24 +9,151 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+Cleaning the data is an important first step to any analysis. In this case, the data we are using comes from GPS collars. This means there are rows within the raw data that are not usable. This can be due to the collar not collecting a location or collecting an inaccurate location. It is important to remove all rows with no data and with inaccurate data (determined here by the dilution measurement). In addition, the time the bears were in the den are removed. This will ensure that we are not extracting habitat use from a time when the bears are not actively changing resource use. We also wanted to convert the time of the GPS fixes from UTC to standard time. This will be more consistent with GIS layers. Seasons were decided on general habitat condition changes like food availability. Seasons were then added to the data in order to conduct seasonal analysis later on. Once the data are cleaned, it is important to have uniform structure to be able to use the data later on.
 
-Hi this is working
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+Set Paths
+* Setting paths is important to make sure you are working with data in the correct file folder
+* It will vary based on where your personal data is stored
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
+path.data <- paste(path.root, "/Jessica's Data/Raw Bear Data (Organized)", sep = "")
+path.new.collars <- paste(path.data, "/New Collars", sep = "")
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+Libraries
+* Installing and using the right packages is important to ensure your functions run properly
+```{r}
+library(lubridate)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+List All Bear Files
+* This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
+```{r}
+setwd(path.new.collars)
+# Pulling in by the pattern lists every file in the folder with that syntax
+# In this case we are using the file extension 
+file.list <- list.files(pattern = "\\.csv$", full.names = FALSE)
+file.list
+```
+
+Creating the Loop
+* Doing this in a loop allows R to run the code for each file one after the other
+```{r}
+for (i in 1:length(file.list)){
+# Calling In Bear Data
+  # Set the path to pull data from the correct folder
+setwd(path.new.collars)
+  # Defining the name of the bear from the base name of the each file in your list
+name<- basename(file.list[i])
+ # Pulling in the actual data using the list of file names
+bear<-read.csv(paste0(file.list[i], sep=''))
+
+
+
+# Calling In Organized Excel
+ # Set the path to pull data from the correct folder
+setwd(path.root)
+ # This file holds information about the bears reproductive status, fix interval, and den exit and emergence
+all.bear.info <- read.csv("Bear_Files_Organization.csv")
+
+# Get Rid of Rows without Data
+  # This deletes any row in the bear file that does not have GPS information
+bear <- bear[!is.na(bear$GPS.Latitude),]
+
+
+# Pull out bear row from organization file
+bear.info <- all.bear.info[all.bear.info$bear == name, ]
+bear.info
+
+# Compare Columns for the Bear Info and Bear File
+# Note that there are separate date and time columns in both
+head(all.bear.info)
+bear.info$den_exit <- paste(bear.info$den_exit_day, bear.info$den_exit_time_UTC)
+bear.info$den_entry <- paste(bear.info$den_entry_day, bear.info$den_entry_time_UTC)
+
+
+# Combine date and time columns and truncate for den
+# Bear.info file
+# Pull out values for exit and entry
+den_exit <- bear.info$den_exit
+den_entry <- bear.info$den_entry
+
+# Removing Rows Before Den Emergence/Exit
+bear <- bear[bear$GPS.Fix.Time >= den_exit, ]
+
+# Removing Rows After Den Entry
+bear <- bear[bear$GPS.Fix.Time <= den_entry, ]
+
+
+
+# Deal with Date and Time
+# The times for the data points need to be converted into UTC
+datetime.est <-as.POSIXct(strptime(as.character(bear$GPS.Fix.Time), tz="UTC", "%Y.%m.%d %H:%M:%S"))
+datetime.est <- format(datetime.est, tz = "America/New_York", usetz = TRUE)
+
+bear$GPS.Fix.Time <- paste(datetime.est)
+
+
+
+# Deal with Location Error
+# Make sure the column names are the same for both types of collars 
+# For all collars, row 14 has the dilution measurement
+names(bear)[14]<-paste("GPS.Positional.Dilution")
+
+# This gets rid of all of the rows that have location data that may be errored
+bear<-subset(bear,((bear$GPS.Fix.Attempt=="Resolved QFP (Uncertain)"|bear$GPS.Fix.Attempt=="Succeeded (2D)")& 
+                     bear$GPS.Positional.Dilution< 5)|
+               ((bear$GPS.Fix.Attempt=="Succeeded (3D)"|bear$GPS.Fix.Attempt=='Resolved QFP')&
+               bear$GPS.Positional.Dilution<20))
+
+
+#Adding Seasons
+# Season breakpoints in month-day format
+Season.breaks<-as.Date(c("01-01","03-14","06-14","08-10","11-15","12-31"),format = "%m-%d")
+ 
+# Convert season breakpoints to Julian day in numeric format
+Season.breaks<-as.numeric(format(Season.breaks,format="%j"))
+
+# Make a lookup table using a function in spatstat package
+# Season.lut is a function that can be used in apply or a loop
+# This step defines the season break dates an a categorical season
+library(spatstat)
+season.lut<-lut(as.factor(c("Winter","Spring","Summer","Fall","Winter")),breaks = Season.breaks)
+
+# Make a new column with the fix dates without the exact time. This will be in the format Year-Month-Day
+bear$short.fix.time <- bear$GPS.Fix.Time
+bear$short.fix.time <- as.Date(bear$short.fix.time)
+
+ 
+# Add a column to the data for season using the season.lut lookup table function
+bear$season <- season.lut(as.numeric(format(bear$short.fix.time,format="%j")))
+
+
+# Add Bear Info to Bear File
+bear$bear <- bear.info$bear
+bear$name <- bear.info$name
+bear$bear_number <- bear.info$bear_number
+bear$year <- bear.info$year
+bear$cub_status <- bear.info$cub_status
+
+# Rename "GPS.Positional.Dilution" to "GPS.Dilution"  
+bear$GPS.Dilution <- bear$GPS.Positional.Dilution
+
+
+# Make Columns Consistent with Other Collars
+# GPS Fix Time, GPS Latitude, GPS Longitude
+
+# Select Columns
+keep.col <- c("bear", "name", "bear_number", "year", "cub_status", "GPS.Fix.Time", "GPS.Latitude", "GPS.Longitude", "GPS.Fix.Attempt", "GPS.Dilution", "season")
+bear <- bear[keep.col]
+
+# When it is finalized, save to "Bear Data Cleaned"
+path.cleaned <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Jessica's Data/Bear Data Cleaned"
+setwd(path.cleaned)
+fname=as.character(paste(file.list[i]))
+#create output file with above name
+write.csv(bear, file = fname, row.names = FALSE)
+}
+```

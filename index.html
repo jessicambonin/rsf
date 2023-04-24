@@ -357,33 +357,227 @@ display: none;
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>Hi this is working</p>
-<p>This is an R Markdown document. Markdown is a simple formatting
-syntax for authoring HTML, PDF, and MS Word documents. For more details
-on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be
-generated that includes both content as well as the output of any
-embedded R code chunks within the document. You can embed an R code
-chunk like this:</p>
-<pre class="r"><code>summary(cars)</code></pre>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
-</div>
-<div id="including-plots" class="section level2">
-<h2>Including Plots</h2>
-<p>You can also embed plots, for example:</p>
-<p><img src="data:image/png;base64,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" width="672" /></p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the
-code chunk to prevent printing of the R code that generated the
-plot.</p>
-</div>
+<p>Cleaning the data is an important first step to any analysis. In this
+case, the data we are using comes from GPS collars. This means there are
+rows within the raw data that are not usable. This can be due to the
+collar not collecting a location or collecting an inaccurate location.
+It is important to remove all rows with no data and with inaccurate data
+(determined here by the dilution measurement). In addition, the time the
+bears were in the den are removed. This will ensure that we are not
+extracting habitat use from a time when the bears are not actively
+changing resource use. We also wanted to convert the time of the GPS
+fixes from UTC to standard time. This will be more consistent with GIS
+layers. Seasons were decided on general habitat condition changes like
+food availability. Seasons were then added to the data in order to
+conduct seasonal analysis later on. Once the data are cleaned, it is
+important to have uniform structure to be able to use the data later
+on.</p>
+<p>Set Paths * Setting paths is important to make sure you are working
+with data in the correct file folder * It will vary based on where your
+personal data is stored</p>
+<pre class="r"><code>path.root &lt;- &quot;C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General&quot;
+path.data &lt;- paste(path.root, &quot;/Jessica&#39;s Data/Raw Bear Data (Organized)&quot;, sep = &quot;&quot;)
+path.new.collars &lt;- paste(path.data, &quot;/New Collars&quot;, sep = &quot;&quot;)</code></pre>
+<p>Libraries * Installing and using the right packages is important to
+ensure your functions run properly</p>
+<pre class="r"><code>library(lubridate)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;lubridate&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     date, intersect, setdiff, union</code></pre>
+<p>List All Bear Files * This allows you to pull in all of the file
+names from one file folder. It is important to note that this is not the
+data itself, just the names of the files in the folder.</p>
+<pre class="r"><code>setwd(path.new.collars)
+# Pulling in by the pattern lists every file in the folder with that syntax
+# In this case we are using the file extension 
+file.list &lt;- list.files(pattern = &quot;\\.csv$&quot;, full.names = FALSE)
+file.list</code></pre>
+<pre><code>##   [1] &quot;Allison2013.csv&quot;        &quot;Allison2014.csv&quot;        &quot;Amy2012.csv&quot;           
+##   [4] &quot;August2017.csv&quot;         &quot;August2018.csv&quot;         &quot;BabyP2021.csv&quot;         
+##   [7] &quot;BigPrescott2015.csv&quot;    &quot;BigPrescott2016.csv&quot;    &quot;BigPrescott2017.csv&quot;   
+##  [10] &quot;Bittersweet2017.csv&quot;    &quot;BlackHawk2020.csv&quot;      &quot;BlueMeadow2020.csv&quot;    
+##  [13] &quot;Bonnie2012.csv&quot;         &quot;Bonnie2013.csv&quot;         &quot;Bonnie2015.csv&quot;        
+##  [16] &quot;Brimfield2013.csv&quot;      &quot;Brimfield2014.csv&quot;      &quot;Brimfield2015.csv&quot;     
+##  [19] &quot;Broadbrook2014.csv&quot;     &quot;Broadbrook2015.csv&quot;     &quot;Broadbrook2016.csv&quot;    
+##  [22] &quot;Byrne2018.csv&quot;          &quot;Byrne2019.csv&quot;          &quot;Candace2012.csv&quot;       
+##  [25] &quot;Candace2013.csv&quot;        &quot;Candace2014.csv&quot;        &quot;Cascade2017.csv&quot;       
+##  [28] &quot;Cascade2018.csv&quot;        &quot;Coldbrook2013.csv&quot;      &quot;Coldbrook2015.csv&quot;     
+##  [31] &quot;Coldbrook2016.csv&quot;      &quot;Deck2020.csv&quot;           &quot;Deck2021.csv&quot;          
+##  [34] &quot;DRF349_2012.csv&quot;        &quot;DRF349_2013.csv&quot;        &quot;Emily2016.csv&quot;         
+##  [37] &quot;Emily2017.csv&quot;          &quot;Fairfield2018.csv&quot;      &quot;Fairfield2020.csv&quot;     
+##  [40] &quot;Fairfield2021.csv&quot;      &quot;Fitz2013.csv&quot;           &quot;Fitz2014.csv&quot;          
+##  [43] &quot;Fitz2015.csv&quot;           &quot;Fitz2016.csv&quot;           &quot;Ginger2017.csv&quot;        
+##  [46] &quot;Ginger2018.csv&quot;         &quot;Ginger2020.csv&quot;         &quot;Ginger2021.csv&quot;        
+##  [49] &quot;Gleason2020.csv&quot;        &quot;Gleason2021.csv&quot;        &quot;Grace2020.csv&quot;         
+##  [52] &quot;Grace2021.csv&quot;          &quot;Grainger2015.csv&quot;       &quot;Granby2_2018.csv&quot;      
+##  [55] &quot;Granby2_2019.csv&quot;       &quot;Granby2_2020.csv&quot;       &quot;Granby2_2021.csv&quot;      
+##  [58] &quot;Granby2013.csv&quot;         &quot;Granby2014.csv&quot;         &quot;Granby2015.csv&quot;        
+##  [61] &quot;Granby2016.csv&quot;         &quot;Granby2020.csv&quot;         &quot;Hatch2015.csv&quot;         
+##  [64] &quot;Henrietta2020.csv&quot;      &quot;HillOtis2018.csv&quot;       &quot;Holiday2016.csv&quot;       
+##  [67] &quot;Holiday2017.csv&quot;        &quot;Holiday2018.csv&quot;        &quot;Holyoke2020.csv&quot;       
+##  [70] &quot;Holyoke2021.csv&quot;        &quot;Hoosac2019.csv&quot;         &quot;Jersey2017.csv&quot;        
+##  [73] &quot;Jersey2018.csv&quot;         &quot;JetBlue2018.csv&quot;        &quot;Juliet2020.csv&quot;        
+##  [76] &quot;Juliet2021.csv&quot;         &quot;July2015.csv&quot;           &quot;July2016.csv&quot;          
+##  [79] &quot;July2017.csv&quot;           &quot;July2018.csv&quot;           &quot;June2015.csv&quot;          
+##  [82] &quot;June2016.csv&quot;           &quot;Katherine2012.csv&quot;      &quot;Katherine2013.csv&quot;     
+##  [85] &quot;Katherine2016.csv&quot;      &quot;Leverett2020.csv&quot;       &quot;LittlePrescott2015.csv&quot;
+##  [88] &quot;LittlePrescott2016.csv&quot; &quot;LittlePrescott2017.csv&quot; &quot;May2012.csv&quot;           
+##  [91] &quot;May2013.csv&quot;            &quot;Northampton2018.csv&quot;    &quot;Northampton2020.csv&quot;   
+##  [94] &quot;Northampton2021.csv&quot;    &quot;OD2020.csv&quot;             &quot;Pelham373_2013.csv&quot;    
+##  [97] &quot;Pelham373_2014.csv&quot;     &quot;Pelham373_2015.csv&quot;     &quot;Pelham465_2017.csv&quot;    
+## [100] &quot;Pelham465_2018.csv&quot;     &quot;Pistachio2020.csv&quot;      &quot;Pistachio2021.csv&quot;     
+## [103] &quot;PolandBrook2016.csv&quot;    &quot;PolandBrook2017.csv&quot;    &quot;Quabbin2013.csv&quot;       
+## [106] &quot;Quabbin2014.csv&quot;        &quot;Quabbin2016.csv&quot;        &quot;Rachel2014.csv&quot;        
+## [109] &quot;Rachel2015.csv&quot;         &quot;Ruby2012.csv&quot;           &quot;Ruby2013.csv&quot;          
+## [112] &quot;Shelley2012.csv&quot;        &quot;Shelley2013.csv&quot;        &quot;Shelley2014.csv&quot;       
+## [115] &quot;Shelley2015.csv&quot;        &quot;Shelley2016.csv&quot;        &quot;Shirley2020.csv&quot;       
+## [118] &quot;Shirley2021.csv&quot;        &quot;Solar2019.csv&quot;          &quot;Solar2020.csv&quot;         
+## [121] &quot;SouthHadley2020.csv&quot;    &quot;SouthHadley2021.csv&quot;    &quot;Sterling2021.csv&quot;      
+## [124] &quot;Sunderland2_2019.csv&quot;   &quot;Sunderland2017.csv&quot;     &quot;Sunderland2018.csv&quot;    
+## [127] &quot;Sunderland2019.csv&quot;     &quot;Sunderland2020.csv&quot;     &quot;Sunderland3_2019.csv&quot;  
+## [130] &quot;Sunderland3_2020.csv&quot;   &quot;Swift2017.csv&quot;          &quot;Swift2018.csv&quot;         
+## [133] &quot;Tamarack2018.csv&quot;       &quot;Tamarack2020.csv&quot;       &quot;Templeton2017.csv&quot;     
+## [136] &quot;Templeton2018.csv&quot;      &quot;Templeton2020.csv&quot;      &quot;Templeton2021.csv&quot;     
+## [139] &quot;Towns2013.csv&quot;          &quot;Whately2012.csv&quot;        &quot;Whately2013.csv&quot;       
+## [142] &quot;Whately2014.csv&quot;</code></pre>
+<p>Creating the Loop * Doing this in a loop allows R to run the code for
+each file one after the other</p>
+<pre class="r"><code>for (i in 1:length(file.list)){
+# Calling In Bear Data
+  # Set the path to pull data from the correct folder
+setwd(path.new.collars)
+  # Defining the name of the bear from the base name of the each file in your list
+name&lt;- basename(file.list[i])
+ # Pulling in the actual data using the list of file names
+bear&lt;-read.csv(paste0(file.list[i], sep=&#39;&#39;))
+
+
+
+# Calling In Organized Excel
+ # Set the path to pull data from the correct folder
+setwd(path.root)
+ # This file holds information about the bears reproductive status, fix interval, and den exit and emergence
+all.bear.info &lt;- read.csv(&quot;Bear_Files_Organization.csv&quot;)
+
+# Get Rid of Rows without Data
+  # This deletes any row in the bear file that does not have GPS information
+bear &lt;- bear[!is.na(bear$GPS.Latitude),]
+
+
+# Pull out bear row from organization file
+bear.info &lt;- all.bear.info[all.bear.info$bear == name, ]
+bear.info
+
+# Compare Columns for the Bear Info and Bear File
+# Note that there are separate date and time columns in both
+head(all.bear.info)
+bear.info$den_exit &lt;- paste(bear.info$den_exit_day, bear.info$den_exit_time_UTC)
+bear.info$den_entry &lt;- paste(bear.info$den_entry_day, bear.info$den_entry_time_UTC)
+
+
+# Combine date and time columns and truncate for den
+# Bear.info file
+# Pull out values for exit and entry
+den_exit &lt;- bear.info$den_exit
+den_entry &lt;- bear.info$den_entry
+
+# Removing Rows Before Den Emergence/Exit
+bear &lt;- bear[bear$GPS.Fix.Time &gt;= den_exit, ]
+
+# Removing Rows After Den Entry
+bear &lt;- bear[bear$GPS.Fix.Time &lt;= den_entry, ]
+
+
+
+# Deal with Date and Time
+# The times for the data points need to be converted into UTC
+datetime.est &lt;-as.POSIXct(strptime(as.character(bear$GPS.Fix.Time), tz=&quot;UTC&quot;, &quot;%Y.%m.%d %H:%M:%S&quot;))
+datetime.est &lt;- format(datetime.est, tz = &quot;America/New_York&quot;, usetz = TRUE)
+
+bear$GPS.Fix.Time &lt;- paste(datetime.est)
+
+
+
+# Deal with Location Error
+# Make sure the column names are the same for both types of collars 
+# For all collars, row 14 has the dilution measurement
+names(bear)[14]&lt;-paste(&quot;GPS.Positional.Dilution&quot;)
+
+# This gets rid of all of the rows that have location data that may be errored
+bear&lt;-subset(bear,((bear$GPS.Fix.Attempt==&quot;Resolved QFP (Uncertain)&quot;|bear$GPS.Fix.Attempt==&quot;Succeeded (2D)&quot;)&amp; 
+                     bear$GPS.Positional.Dilution&lt; 5)|
+               ((bear$GPS.Fix.Attempt==&quot;Succeeded (3D)&quot;|bear$GPS.Fix.Attempt==&#39;Resolved QFP&#39;)&amp;
+               bear$GPS.Positional.Dilution&lt;20))
+
+
+#Adding Seasons
+# Season breakpoints in month-day format
+Season.breaks&lt;-as.Date(c(&quot;01-01&quot;,&quot;03-14&quot;,&quot;06-14&quot;,&quot;08-10&quot;,&quot;11-15&quot;,&quot;12-31&quot;),format = &quot;%m-%d&quot;)
+ 
+# Convert season breakpoints to Julian day in numeric format
+Season.breaks&lt;-as.numeric(format(Season.breaks,format=&quot;%j&quot;))
+
+# Make a lookup table using a function in spatstat package
+# Season.lut is a function that can be used in apply or a loop
+# This step defines the season break dates an a categorical season
+library(spatstat)
+season.lut&lt;-lut(as.factor(c(&quot;Winter&quot;,&quot;Spring&quot;,&quot;Summer&quot;,&quot;Fall&quot;,&quot;Winter&quot;)),breaks = Season.breaks)
+
+# Make a new column with the fix dates without the exact time. This will be in the format Year-Month-Day
+bear$short.fix.time &lt;- bear$GPS.Fix.Time
+bear$short.fix.time &lt;- as.Date(bear$short.fix.time)
+
+ 
+# Add a column to the data for season using the season.lut lookup table function
+bear$season &lt;- season.lut(as.numeric(format(bear$short.fix.time,format=&quot;%j&quot;)))
+
+
+# Add Bear Info to Bear File
+bear$bear &lt;- bear.info$bear
+bear$name &lt;- bear.info$name
+bear$bear_number &lt;- bear.info$bear_number
+bear$year &lt;- bear.info$year
+bear$cub_status &lt;- bear.info$cub_status
+
+# Rename &quot;GPS.Positional.Dilution&quot; to &quot;GPS.Dilution&quot;  
+bear$GPS.Dilution &lt;- bear$GPS.Positional.Dilution
+
+
+# Make Columns Consistent with Other Collars
+# GPS Fix Time, GPS Latitude, GPS Longitude
+
+# Select Columns
+keep.col &lt;- c(&quot;bear&quot;, &quot;name&quot;, &quot;bear_number&quot;, &quot;year&quot;, &quot;cub_status&quot;, &quot;GPS.Fix.Time&quot;, &quot;GPS.Latitude&quot;, &quot;GPS.Longitude&quot;, &quot;GPS.Fix.Attempt&quot;, &quot;GPS.Dilution&quot;, &quot;season&quot;)
+bear &lt;- bear[keep.col]
+
+# When it is finalized, save to &quot;Bear Data Cleaned&quot;
+path.cleaned &lt;- &quot;C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Jessica&#39;s Data/Bear Data Cleaned&quot;
+setwd(path.cleaned)
+fname=as.character(paste(file.list[i]))
+#create output file with above name
+write.csv(bear, file = fname, row.names = FALSE)
+}</code></pre>
+<pre><code>## Warning: package &#39;spatstat&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Loading required package: spatstat.data</code></pre>
+<pre><code>## Loading required package: spatstat.geom</code></pre>
+<pre><code>## spatstat.geom 3.1-0</code></pre>
+<pre><code>## Loading required package: spatstat.random</code></pre>
+<pre><code>## spatstat.random 3.1-4</code></pre>
+<pre><code>## Loading required package: spatstat.explore</code></pre>
+<pre><code>## Warning: package &#39;spatstat.explore&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Loading required package: nlme</code></pre>
+<pre><code>## spatstat.explore 3.1-0</code></pre>
+<pre><code>## Loading required package: spatstat.model</code></pre>
+<pre><code>## Loading required package: rpart</code></pre>
+<pre><code>## spatstat.model 3.2-1</code></pre>
+<pre><code>## Loading required package: spatstat.linnet</code></pre>
+<pre><code>## Warning: package &#39;spatstat.linnet&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## spatstat.linnet 3.1-0</code></pre>
+<pre><code>## 
+## spatstat 3.0-3 
+## For an introduction to spatstat, type &#39;beginner&#39;</code></pre>
 
 
 
