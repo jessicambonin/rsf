@@ -13,7 +13,7 @@
 
 <meta name="date" content="2023-04-24" />
 
-<title>RSF</title>
+<title>Resource Selection Function Guide</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,17 +350,20 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">RSF</h1>
+<h1 class="title toc-ignore">Resource Selection Function Guide</h1>
 <h4 class="author">Jessica Bonin</h4>
 <h4 class="date">2023-04-24</h4>
 
 </div>
 
 
-<div id="resource-selection-function-guide" class="section level2 tabset tabset-fade">
-<h2 class="tabset tabset-fade">Resource Selection Function Guide</h2>
-<div id="cleaning" class="section level3">
-<h3>Cleaning</h3>
+<div id="resource-selection-function-guide" class="section level2 tabset tabset-fade tabset-pills">
+<h2 class="tabset tabset-fade tabset-pills">Resource Selection Function
+Guide</h2>
+<p>This GitHub page was created to allow the reader to follow along with
+the coding process of running an RSF.</p>
+<div id="cleaning" class="section level3 tabset">
+<h3 class="tabset">Cleaning</h3>
 <p>Cleaning the data is an important first step to any analysis. In this
 case, the data we are using comes from GPS collars. This means there are
 rows within the raw data that are not usable. This can be due to the
@@ -376,24 +379,24 @@ food availability. Seasons were then added to the data in order to
 conduct seasonal analysis later on. Once the data are cleaned, it is
 important to have uniform structure to be able to use the data later
 on.</p>
-<p>Set Paths</p>
-<p>Setting paths is important to make sure you are working with data in
-the correct file folder</p>
-<p>It will vary based on where your personal data is stored</p>
+<p><strong>Set Paths</strong> Setting paths is important to make sure
+you are working with data in the correct file folder It will vary based
+on where your personal data is stored</p>
 <pre class="r"><code>path.root &lt;- &quot;C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General&quot;
 path.data &lt;- paste(path.root, &quot;/Jessica&#39;s Data/Raw Bear Data (Organized)&quot;, sep = &quot;&quot;)
 path.new.collars &lt;- paste(path.data, &quot;/New Collars&quot;, sep = &quot;&quot;)</code></pre>
-<p>Libraries * Installing and using the right packages is important to
-ensure your functions run properly</p>
+<p><strong>Libraries</strong> Installing and using the right packages is
+important to ensure your functions run properly</p>
 <pre class="r"><code>library(lubridate)</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;lubridate&#39;</code></pre>
 <pre><code>## The following objects are masked from &#39;package:base&#39;:
 ## 
 ##     date, intersect, setdiff, union</code></pre>
-<p>List All Bear Files * This allows you to pull in all of the file
-names from one file folder. It is important to note that this is not the
-data itself, just the names of the files in the folder.</p>
+<p><strong>List All Bear Files</strong> This allows you to pull in all
+of the file names from one file folder. It is important to note that
+this is not the data itself, just the names of the files in the
+folder.</p>
 <pre class="r"><code>setwd(path.new.collars)
 # Pulling in by the pattern lists every file in the folder with that syntax
 # In this case we are using the file extension 
@@ -447,8 +450,8 @@ file.list</code></pre>
 ## [136] &quot;Templeton2018.csv&quot;      &quot;Templeton2020.csv&quot;      &quot;Templeton2021.csv&quot;     
 ## [139] &quot;Towns2013.csv&quot;          &quot;Whately2012.csv&quot;        &quot;Whately2013.csv&quot;       
 ## [142] &quot;Whately2014.csv&quot;</code></pre>
-<p>Creating the Loop * Doing this in a loop allows R to run the code for
-each file one after the other</p>
+<p><strong>Creating the Loop</strong> Doing this in a loop allows R to
+run the code for each file one after the other</p>
 <pre class="r"><code>for (i in 1:length(file.list)){
 # Calling In Bear Data
   # Set the path to pull data from the correct folder
@@ -583,6 +586,179 @@ write.csv(bear, file = fname, row.names = FALSE)
 <pre><code>## 
 ## spatstat 3.0-3 
 ## For an introduction to spatstat, type &#39;beginner&#39;</code></pre>
+</div>
+<div id="removing-extreme-movements" class="section level3 tabset">
+<h3 class="tabset">Removing Extreme Movements</h3>
+<p>Some of the bears took unusual movement paths while collared. The
+locations of these unusual movements can affect habitat analysis because
+it defers from normal patterns of behavior. We are not sure why this
+behavior occurs, but it could be due to an unique pressure put on an
+individual. For this reason, the data during those extreme movement
+patterns are removed from the data. The dates for the data being removed
+were determined manually by identifying the start and finish of the
+extreme movement path in ArcGIS.</p>
+<p><strong>Libraries</strong> Installing and using the right packages is
+important to ensure your functions run properly</p>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## Warning: package &#39;dplyr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:nlme&#39;:
+## 
+##     collapse</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<p><strong>Set Paths</strong> Setting paths is important to make sure
+you are working with data in the correct file folder It will vary based
+on where your personal data is stored</p>
+<pre class="r"><code>path.root &lt;- &quot;C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General&quot;
+path.data &lt;- paste(path.root, &quot;/Jessica&#39;s Data/Bear Data Cleaned&quot;, sep = &quot;&quot;)
+path.ex.mov &lt;- paste(path.root, &quot;/Jessica&#39;s Data/Notes_and_Ideas&quot;, sep = &quot;&quot;)
+path.save &lt;- paste(path.root, &quot;/Jessica&#39;s Data/Bear Data Cleaned&quot;, sep = &quot;&quot;)</code></pre>
+<p><strong>Call in Extreme Movement Data</strong> This file was manually
+created with the dates of the extreme movements identified in ArcGIS</p>
+<pre class="r"><code># Set the path to pull data from the correct folder
+setwd(path.ex.mov)
+# This file has the date and time for when each of the bears start and end their extreme movement path
+ex_movements &lt;- read.csv(&quot;Extreme_Movements.csv&quot;)</code></pre>
+<p><strong>Call in Bears with Extreme Movements</strong></p>
+<pre class="r"><code># Set the path
+setwd(path.data)
+
+# Call in .csvs for the bears that were deturmined to make an unusal movement path
+BigPrescott2017 &lt;- read.csv(&quot;BigPrescott2017.csv&quot;)
+Deck2021 &lt;- read.csv(&quot;Deck2021.csv&quot;)
+Emily2017 &lt;- read.csv(&quot;Emily2017.csv&quot;)
+Jersey2017 &lt;- read.csv(&quot;Jersey2017.csv&quot;)
+July2017 &lt;- read.csv(&quot;July2017.csv&quot;)
+Pelham465_2018 &lt;- read.csv(&quot;Pelham465_2018.csv&quot;)
+Sunderland2017 &lt;- read.csv(&quot;Sunderland2017.csv&quot;)
+Swift2017 &lt;- read.csv(&quot;Swift2017.csv&quot;)
+Templeton2017 &lt;- read.csv(&quot;Templeton2017.csv&quot;)
+Templeton2021 &lt;- read.csv(&quot;Templeton2021.csv&quot;)</code></pre>
+<p><strong>List the Extreme Movements for Each Bear</strong></p>
+<pre class="r"><code># List the Extreme Movements for Each Bear
+list(ex_movements)</code></pre>
+<pre><code>## [[1]]
+##               Bear                   Start                     End
+## 1  BigPrescott2017 2017-09-26 14:45:39 EDT 2017-10-18 17:00:43 EDT
+## 2         Deck2021 2021-10-07 13:15:21 EDT 2021-11-20 17:30:11 EST
+## 3        Emily2017 2017-10-15 08:45:37 EDT 2017-11-06 15:15:37 EST
+## 4       Jersey2017 2017-10-04 21:30:24 EDT 2017-10-18 21:30:19 EDT
+## 5         July2017 2017-09-20 17:45:31 EDT 2017-11-13 11:30:20 EST
+## 6   Pelham465_2018 2018-09-13 21:30:43 EDT 2018-11-23 04:00:37 EST
+## 7   Sunderland2017 2017-10-03 23:45:25 EDT 2017-10-21 04:15:22 EDT
+## 8        Swift2017 2017-09-06 20:45:39 EDT 2017-10-10 14:00:25 EDT
+## 9    Templeton2017 2017-10-02 18:30:38 EDT 2017-12-23 19:45:30 EST
+## 10   Templeton2021 2021-09-13 13:15:10 EDT 2021-11-07 12:15:47 EST</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+BigPrescott2017 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(BigPrescott2017$GPS.Fix.Time == &#39;2017-09-26 14:45:39 EDT&#39;)</code></pre>
+<pre><code>## [1] 3526</code></pre>
+<pre class="r"><code>which(BigPrescott2017$GPS.Fix.Time == &#39;2017-10-18 17:00:43 EDT&#39;)</code></pre>
+<pre><code>## [1] 3950</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements 
+BigPrescott2017 &lt;- BigPrescott2017[-(3526:3950),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+Deck2021 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(Deck2021$GPS.Fix.Time == &#39;2021-10-07 13:15:21 EDT&#39;)</code></pre>
+<pre><code>## [1] 5586</code></pre>
+<pre class="r"><code>which(Deck2021$GPS.Fix.Time == &#39;2021-11-20 17:30:11 EST&#39;)</code></pre>
+<pre><code>## [1] 7010</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+Deck2021 &lt;- Deck2021[-(5586: 7010),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+Emily2017 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(Emily2017$GPS.Fix.Time == &#39;2017-10-15 08:45:37 EDT&#39;)</code></pre>
+<pre><code>## [1] 3907</code></pre>
+<pre class="r"><code>which(Emily2017$GPS.Fix.Time == &#39;2017-11-06 15:15:37 EST&#39;)</code></pre>
+<pre><code>## [1] 4358</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+Emily2017 &lt;- Emily2017[-(3907:4358),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+Jersey2017 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(Jersey2017$GPS.Fix.Time == &#39;2017-10-04 21:30:24 EDT&#39;)</code></pre>
+<pre><code>## [1] 2123</code></pre>
+<pre class="r"><code>which(Jersey2017$GPS.Fix.Time == &#39;2017-10-18 21:30:19 EDT&#39;)</code></pre>
+<pre><code>## [1] 2415</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+Jersey2017 &lt;- Jersey2017[-(2123:2415),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+July2017 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(July2017$GPS.Fix.Time == &#39;2017-09-20 17:45:31 EDT&#39;)</code></pre>
+<pre><code>## [1] 3587</code></pre>
+<pre class="r"><code>which(July2017$GPS.Fix.Time == &#39;2017-11-13 11:30:20 EST&#39;)</code></pre>
+<pre><code>## [1] 4762</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+July2017 &lt;- July2017[-(3587:4762),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+Pelham465_2018 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(Pelham465_2018$GPS.Fix.Time == &#39;2018-09-13 21:30:43 EDT&#39;)</code></pre>
+<pre><code>## [1] 3311</code></pre>
+<pre class="r"><code>which(Pelham465_2018$GPS.Fix.Time == &#39;2018-11-23 04:00:37 EST&#39;)</code></pre>
+<pre><code>## [1] 4815</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+Pelham465_2018 &lt;- Pelham465_2018[-(3311:4815),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+Sunderland2017 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(Sunderland2017$GPS.Fix.Time == &#39;2017-10-03 23:45:25 EDT&#39;)</code></pre>
+<pre><code>## [1] 4154</code></pre>
+<pre class="r"><code>which(Sunderland2017$GPS.Fix.Time == &#39;2017-10-21 04:15:22 EDT&#39;)</code></pre>
+<pre><code>## [1] 4551</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+Sunderland2017 &lt;- Sunderland2017[-(4154:4551),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+Swift2017 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(Swift2017$GPS.Fix.Time == &#39;2017-09-06 20:45:39 EDT&#39;)</code></pre>
+<pre><code>## [1] 2761</code></pre>
+<pre class="r"><code>which(Swift2017$GPS.Fix.Time == &#39;2017-10-10 14:00:25 EDT&#39;)</code></pre>
+<pre><code>## [1] 3255</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+Swift2017 &lt;- Swift2017[-(2761:3255),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+Templeton2017 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(Templeton2017$GPS.Fix.Time == &#39;2017-10-02 18:30:38 EDT&#39;)</code></pre>
+<pre><code>## [1] 1695</code></pre>
+<pre class="r"><code>which(Templeton2017$GPS.Fix.Time == &#39;2017-12-23 19:45:30 EST&#39;)</code></pre>
+<pre><code>## [1] 3353</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+Templeton2017 &lt;- Templeton2017[-(1695:3353),]</code></pre>
+<p><strong>Get Rid of the Rows that Fall Between the Start and End of
+Templeton2021 Extreme Movement Path</strong></p>
+<pre class="r"><code># Determine which rows are the start and end
+which(Templeton2021$GPS.Fix.Time == &#39;2021-09-13 13:15:10 EDT&#39;)</code></pre>
+<pre><code>## [1] 5433</code></pre>
+<pre class="r"><code>which(Templeton2021$GPS.Fix.Time == &#39;2021-11-07 12:15:47 EST&#39;)</code></pre>
+<pre><code>## [1] 7190</code></pre>
+<pre class="r"><code># Remove the rows that fall in the extreme movements
+Templeton2021 &lt;- Templeton2021[-(5433:7190),]</code></pre>
+<p><strong>Save to replace</strong></p>
+<pre class="r"><code># Set the path to pull data from the correct folder
+setwd(path.save)
+# Save the files with the same name to replace the existing files that include the extreme movement rows
+write.csv(BigPrescott2017, file = &quot;BigPrescott2017.csv&quot;, row.names = FALSE)
+write.csv(Deck2021, file = &quot;Deck2021.csv&quot;, row.names = FALSE)
+write.csv(Emily2017, file = &quot;Emily2017.csv&quot;, row.names = FALSE)
+write.csv(Jersey2017, file = &quot;Jersey2017.csv&quot;, row.names = FALSE)
+write.csv(July2017, file = &quot;July2017.csv&quot;, row.names = FALSE)
+write.csv(Pelham465_2018, file = &quot;Pelham465_2018.csv&quot;, row.names = FALSE)
+write.csv(Sunderland2017, file = &quot;Sunderland2017.csv&quot;, row.names = FALSE)
+write.csv(Swift2017, file = &quot;Swift2017.csv&quot;, row.names = FALSE)
+write.csv(Templeton2017, file =&quot;Templeton2017.csv&quot;, row.names = FALSE)
+write.csv(Templeton2021, file =&quot;Templeton2021.csv&quot;, row.names = FALSE)</code></pre>
 </div>
 </div>
 

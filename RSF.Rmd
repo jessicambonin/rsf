@@ -1,5 +1,5 @@
 ---
-title: "RSF"
+title: "Resource Selection Function Guide"
 author: "Jessica Bonin"
 date: "2023-04-24"
 output: html_document
@@ -9,17 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Resource Selection Function Guide {.tabset .tabset-fade}
+## Resource Selection Function Guide {.tabset .tabset-fade .tabset-pills}
 
-### Cleaning 
+This GitHub page was created to allow the reader to follow along with the coding process of running an RSF.
+
+### Cleaning {.tabset}
 
 Cleaning the data is an important first step to any analysis. In this case, the data we are using comes from GPS collars. This means there are rows within the raw data that are not usable. This can be due to the collar not collecting a location or collecting an inaccurate location. It is important to remove all rows with no data and with inaccurate data (determined here by the dilution measurement). In addition, the time the bears were in the den are removed. This will ensure that we are not extracting habitat use from a time when the bears are not actively changing resource use. We also wanted to convert the time of the GPS fixes from UTC to standard time. This will be more consistent with GIS layers. Seasons were decided on general habitat condition changes like food availability. Seasons were then added to the data in order to conduct seasonal analysis later on. Once the data are cleaned, it is important to have uniform structure to be able to use the data later on.
 
-Set Paths
-
+**Set Paths**
 Setting paths is important to make sure you are working with data in the correct file folder
-
-
 It will vary based on where your personal data is stored
 ```{r}
 path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
@@ -28,15 +27,15 @@ path.new.collars <- paste(path.data, "/New Collars", sep = "")
 ```
 
 
-Libraries
-* Installing and using the right packages is important to ensure your functions run properly
+**Libraries**
+Installing and using the right packages is important to ensure your functions run properly
 ```{r}
 library(lubridate)
 ```
 
 
-List All Bear Files
-* This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
+**List All Bear Files**
+This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
 ```{r}
 setwd(path.new.collars)
 # Pulling in by the pattern lists every file in the folder with that syntax
@@ -45,8 +44,8 @@ file.list <- list.files(pattern = "\\.csv$", full.names = FALSE)
 file.list
 ```
 
-Creating the Loop
-* Doing this in a loop allows R to run the code for each file one after the other
+**Creating the Loop**
+Doing this in a loop allows R to run the code for each file one after the other
 ```{r}
 for (i in 1:length(file.list)){
 # Calling In Bear Data
@@ -163,4 +162,177 @@ fname=as.character(paste(file.list[i]))
 #create output file with above name
 write.csv(bear, file = fname, row.names = FALSE)
 }
+```
+
+### Removing Extreme Movements {.tabset}
+
+Some of the bears took unusual movement paths while collared. The locations of these unusual movements can affect habitat analysis because it defers from normal patterns of behavior. We are not sure why this behavior occurs, but it could be due to an unique pressure put on an individual. For this reason, the data during those extreme movement patterns are removed from the data. The dates for the data being removed were determined manually by identifying the start and finish of the extreme movement path in ArcGIS.
+
+**Libraries**
+Installing and using the right packages is important to ensure your functions run properly
+```{r}
+library(dplyr)
+```
+
+
+**Set Paths**
+Setting paths is important to make sure you are working with data in the correct file folder
+It will vary based on where your personal data is stored
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
+path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
+path.ex.mov <- paste(path.root, "/Jessica's Data/Notes_and_Ideas", sep = "")
+path.save <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
+```
+
+
+**Call in Extreme Movement Data**
+This file was manually created with the dates of the extreme movements identified in ArcGIS
+```{r}
+# Set the path to pull data from the correct folder
+setwd(path.ex.mov)
+# This file has the date and time for when each of the bears start and end their extreme movement path
+ex_movements <- read.csv("Extreme_Movements.csv")
+```
+
+
+**Call in Bears with Extreme Movements**
+```{r}
+# Set the path
+setwd(path.data)
+
+# Call in .csvs for the bears that were deturmined to make an unusal movement path
+BigPrescott2017 <- read.csv("BigPrescott2017.csv")
+Deck2021 <- read.csv("Deck2021.csv")
+Emily2017 <- read.csv("Emily2017.csv")
+Jersey2017 <- read.csv("Jersey2017.csv")
+July2017 <- read.csv("July2017.csv")
+Pelham465_2018 <- read.csv("Pelham465_2018.csv")
+Sunderland2017 <- read.csv("Sunderland2017.csv")
+Swift2017 <- read.csv("Swift2017.csv")
+Templeton2017 <- read.csv("Templeton2017.csv")
+Templeton2021 <- read.csv("Templeton2021.csv")
+```
+
+**List the Extreme Movements for Each Bear**
+```{r}
+# List the Extreme Movements for Each Bear
+list(ex_movements)
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of BigPrescott2017 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(BigPrescott2017$GPS.Fix.Time == '2017-09-26 14:45:39 EDT')
+which(BigPrescott2017$GPS.Fix.Time == '2017-10-18 17:00:43 EDT')
+
+# Remove the rows that fall in the extreme movements 
+BigPrescott2017 <- BigPrescott2017[-(3526:3950),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of Deck2021 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(Deck2021$GPS.Fix.Time == '2021-10-07 13:15:21 EDT')
+which(Deck2021$GPS.Fix.Time == '2021-11-20 17:30:11 EST')
+
+# Remove the rows that fall in the extreme movements
+Deck2021 <- Deck2021[-(5586: 7010),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of Emily2017 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(Emily2017$GPS.Fix.Time == '2017-10-15 08:45:37 EDT')
+which(Emily2017$GPS.Fix.Time == '2017-11-06 15:15:37 EST')
+
+# Remove the rows that fall in the extreme movements
+Emily2017 <- Emily2017[-(3907:4358),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of Jersey2017 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(Jersey2017$GPS.Fix.Time == '2017-10-04 21:30:24 EDT')
+which(Jersey2017$GPS.Fix.Time == '2017-10-18 21:30:19 EDT')
+
+# Remove the rows that fall in the extreme movements
+Jersey2017 <- Jersey2017[-(2123:2415),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of July2017 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(July2017$GPS.Fix.Time == '2017-09-20 17:45:31 EDT')
+which(July2017$GPS.Fix.Time == '2017-11-13 11:30:20 EST')
+
+# Remove the rows that fall in the extreme movements
+July2017 <- July2017[-(3587:4762),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of Pelham465_2018 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(Pelham465_2018$GPS.Fix.Time == '2018-09-13 21:30:43 EDT')
+which(Pelham465_2018$GPS.Fix.Time == '2018-11-23 04:00:37 EST')
+
+# Remove the rows that fall in the extreme movements
+Pelham465_2018 <- Pelham465_2018[-(3311:4815),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of Sunderland2017 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(Sunderland2017$GPS.Fix.Time == '2017-10-03 23:45:25 EDT')
+which(Sunderland2017$GPS.Fix.Time == '2017-10-21 04:15:22 EDT')
+
+# Remove the rows that fall in the extreme movements
+Sunderland2017 <- Sunderland2017[-(4154:4551),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of Swift2017 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(Swift2017$GPS.Fix.Time == '2017-09-06 20:45:39 EDT')
+which(Swift2017$GPS.Fix.Time == '2017-10-10 14:00:25 EDT')
+
+# Remove the rows that fall in the extreme movements
+Swift2017 <- Swift2017[-(2761:3255),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of Templeton2017 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(Templeton2017$GPS.Fix.Time == '2017-10-02 18:30:38 EDT')
+which(Templeton2017$GPS.Fix.Time == '2017-12-23 19:45:30 EST')
+
+# Remove the rows that fall in the extreme movements
+Templeton2017 <- Templeton2017[-(1695:3353),]
+```
+
+**Get Rid of the Rows that Fall Between the Start and End of Templeton2021 Extreme Movement Path**
+```{r}
+# Determine which rows are the start and end
+which(Templeton2021$GPS.Fix.Time == '2021-09-13 13:15:10 EDT')
+which(Templeton2021$GPS.Fix.Time == '2021-11-07 12:15:47 EST')
+
+# Remove the rows that fall in the extreme movements
+Templeton2021 <- Templeton2021[-(5433:7190),]
+```
+
+**Save to replace**
+```{r}
+# Set the path to pull data from the correct folder
+setwd(path.save)
+# Save the files with the same name to replace the existing files that include the extreme movement rows
+write.csv(BigPrescott2017, file = "BigPrescott2017.csv", row.names = FALSE)
+write.csv(Deck2021, file = "Deck2021.csv", row.names = FALSE)
+write.csv(Emily2017, file = "Emily2017.csv", row.names = FALSE)
+write.csv(Jersey2017, file = "Jersey2017.csv", row.names = FALSE)
+write.csv(July2017, file = "July2017.csv", row.names = FALSE)
+write.csv(Pelham465_2018, file = "Pelham465_2018.csv", row.names = FALSE)
+write.csv(Sunderland2017, file = "Sunderland2017.csv", row.names = FALSE)
+write.csv(Swift2017, file = "Swift2017.csv", row.names = FALSE)
+write.csv(Templeton2017, file ="Templeton2017.csv", row.names = FALSE)
+write.csv(Templeton2021, file ="Templeton2021.csv", row.names = FALSE)
 ```
