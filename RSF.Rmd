@@ -9,16 +9,21 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Resource Selection Function Guide {.tabset .tabset-fade .tabset-pills}
+# Resource Selection Function Guide {.tabset .tabset-fade .tabset-pills}
 
 This GitHub page was created to allow the reader to follow along with the coding process of running an RSF.
 
-### Cleaning {.tabset}
+## Cleaning {.tabset}
 
-Cleaning the data is an important first step to any analysis. In this case, the data we are using comes from GPS collars. This means there are rows within the raw data that are not usable. This can be due to the collar not collecting a location or collecting an inaccurate location. It is important to remove all rows with no data and with inaccurate data (determined here by the dilution measurement). In addition, the time the bears were in the den are removed. This will ensure that we are not extracting habitat use from a time when the bears are not actively changing resource use. We also wanted to convert the time of the GPS fixes from UTC to standard time. This will be more consistent with GIS layers. Seasons were decided on general habitat condition changes like food availability. Seasons were then added to the data in order to conduct seasonal analysis later on. Once the data are cleaned, it is important to have uniform structure to be able to use the data later on.
+Cleaning the data is an important first step to any analysis.
+
+### Initial Cleaning
+
+The data we are using comes from GPS collars. This means there are rows within the raw data that are not usable. This can be due to the collar not collecting a location or collecting an inaccurate location. It is important to remove all rows with no data and with inaccurate data (determined here by the dilution measurement). In addition, the time the bears were in the den are removed. This will ensure that we are not extracting habitat use from a time when the bears are not actively changing resource use. We also wanted to convert the time of the GPS fixes from UTC to standard time. This will be more consistent with GIS layers. Seasons were decided on general habitat condition changes like food availability. Seasons were then added to the data in order to conduct seasonal analysis later on. Once the data are cleaned, it is important to have uniform structure to be able to use the data later on.
+
 
 **Set Paths**
-Setting paths is important to make sure you are working with data in the correct file folder
+Setting paths is important to make sure you are working with data in the correct file folder. 
 It will vary based on where your personal data is stored
 ```{r}
 path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
@@ -26,13 +31,11 @@ path.data <- paste(path.root, "/Jessica's Data/Raw Bear Data (Organized)", sep =
 path.new.collars <- paste(path.data, "/New Collars", sep = "")
 ```
 
-
 **Libraries**
-Installing and using the right packages is important to ensure your functions run properly
+Installing and using the right packages is important to ensure your functions run properly.
 ```{r}
 library(lubridate)
 ```
-
 
 **List All Bear Files**
 This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
@@ -45,7 +48,7 @@ file.list
 ```
 
 **Creating the Loop**
-Doing this in a loop allows R to run the code for each file one after the other
+Doing this in a loop allows R to run the code for each file one after the other.
 ```{r}
 for (i in 1:length(file.list)){
 # Calling In Bear Data
@@ -164,20 +167,20 @@ write.csv(bear, file = fname, row.names = FALSE)
 }
 ```
 
-### Removing Extreme Movements {.tabset}
+### Removing Extreme Movements 
 
 Some of the bears took unusual movement paths while collared. The locations of these unusual movements can affect habitat analysis because it defers from normal patterns of behavior. We are not sure why this behavior occurs, but it could be due to an unique pressure put on an individual. For this reason, the data during those extreme movement patterns are removed from the data. The dates for the data being removed were determined manually by identifying the start and finish of the extreme movement path in ArcGIS.
 
+
 **Libraries**
-Installing and using the right packages is important to ensure your functions run properly
+Installing and using the right packages is important to ensure your functions run properly.
 ```{r}
 library(dplyr)
 ```
 
-
 **Set Paths**
-Setting paths is important to make sure you are working with data in the correct file folder
-It will vary based on where your personal data is stored
+Setting paths is important to make sure you are working with data in the correct file folder.
+It will vary based on where your personal data is stored.
 ```{r}
 path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
 path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
@@ -185,16 +188,14 @@ path.ex.mov <- paste(path.root, "/Jessica's Data/Notes_and_Ideas", sep = "")
 path.save <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
 ```
 
-
 **Call in Extreme Movement Data**
-This file was manually created with the dates of the extreme movements identified in ArcGIS
+This file was manually created with the dates of the extreme movements identified in ArcGIS.
 ```{r}
 # Set the path to pull data from the correct folder
 setwd(path.ex.mov)
 # This file has the date and time for when each of the bears start and end their extreme movement path
 ex_movements <- read.csv("Extreme_Movements.csv")
 ```
-
 
 **Call in Bears with Extreme Movements**
 ```{r}
@@ -335,4 +336,651 @@ write.csv(Sunderland2017, file = "Sunderland2017.csv", row.names = FALSE)
 write.csv(Swift2017, file = "Swift2017.csv", row.names = FALSE)
 write.csv(Templeton2017, file ="Templeton2017.csv", row.names = FALSE)
 write.csv(Templeton2021, file ="Templeton2021.csv", row.names = FALSE)
+```
+
+## Creating Shapefiles {.tabset}
+
+After the data are cleaned, shapefiles are created to have the data as spacially referenced. This takes the data for each GIS location and assigns it to a spacially referenced point. For this project, we want all data to be referenced to UTM Zone 18 North. This data was collected using World Geodetic System 1984. Note: CRS stands for Coordinate Reference System
+
+
+**Set Paths**
+Set the path pick the file folder to pull in your data. It will be different based on where your data is stored.
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
+path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
+```
+
+**Libraries**
+Make sure to install and pull in the libraries you need in order for your code functions to work.
+```{r}
+library(sf)
+library(rgdal)
+library(raster)
+```
+
+**Define Projection Strings**
+The projection string tells R what projection your data is in. If the projection is wrong or not defined, the data will not be graphically located correctly. 
+```{r}
+# Assign the projection string
+# WGS84 - World Geodetic System 1984
+# The data was collected referencing this projection
+prj.wgs84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs" 
+LatLong <- crs(prj.wgs84)
+
+# WGS 84 / UTM zone 18N
+# We want the final data to be referencing this projection
+prj.utmWGSz18 <- "+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+UTM18 <- crs(prj.utmWGSz18)
+```
+
+**List All Bear Files**
+This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
+```{r}
+setwd(path.data)
+# Pulling in by the pattern lists every file in the folder with that syntax
+# In this case we are using the file extension 
+file.list <- list.files(pattern = "\\.csv$", full.names = FALSE)
+file.list
+```
+
+**Creating the Shapefiles From .csv Data**
+Doing this in a loop allows R to run the code for each file one after the other.
+```{r}
+for (i in 1:length(file.list)){
+# Calling In Bear Data
+# Set the path to pull data from the correct folder
+setwd(path.data)
+# Defining the name of the bear from the base name of the each file in your list
+name<- basename(file.list[i])
+# Pulling in the actual data using the list of file names 
+bear<-read.csv(paste0(file.list[i], sep=''))
+
+
+# Convert the .csv files to an spatial frame object and define its projection
+bear <- st_as_sf(bear, coords = c("GPS.Longitude", "GPS.Latitude"), crs = LatLong)
+st_crs(bear)
+
+
+# Transform into UTM Zone 18 N
+# The EPSG code form UTM Zone 18 North is 32618
+bear_UTM <- st_transform(bear, crs = UTM18)
+st_crs(bear_UTM) <- 32618
+
+
+# Export As a Shapefile
+path.save <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Jessica's Data/Cleaned Shapefiles"
+setwd(path.save)
+fname=as.character(paste(file.list[i]))
+st_write(bear_UTM, fname, driver = "ESRI Shapefile", append=FALSE)
+}
+```
+
+## MCPs
+
+The home range of each bear will be determined using an Minimum Convex Polygon. We will generate a 99% MCP (meaning generating an border around 99% of the data points). This ensures that if any extreme fixes were not removed during data cleaning, the home range calculation will not include the area where that point lies. We will also include a 200 meter buffer around the MCP. This is to include the area around the use locations that is still available for the bear to go. We chose 200 meters because that is how far a bear can travel in the allotted amount of time (talk about fixes and movement steps).
+
+
+**Libraries**
+Installing and using the right packages is important to ensure your functions run properly.
+```{r}
+library(adehabitatHR)
+library(sp)
+library(rgdal)
+library(sf)
+```
+
+**Set Paths**
+Setting paths is important to make sure you are working with data in the correct file folder. It will vary based on where your personal data is stored.
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
+path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
+path.save <- paste(path.root, "/Jessica's Data/MCPs", sep = "")
+```
+
+**List All Bear Files**
+This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
+```{r}
+setwd(path.data)
+file.list <- list.files(pattern = "\\.csv$", full.names = FALSE)
+file.list
+```
+
+**Creating the Loop to convert data into UTM Zone 18 North and create the MCP with a buffer**
+Doing this in a loop allows R to run the code for each file one after the other.
+```{r}
+for (i in 1:length(file.list)){
+# Calling In Bear Data
+  # Set the path to pull data from the correct folder
+setwd(path.data)
+# Defining the name of the bear from the base name of the each file in your list
+name<- basename(file.list[i])
+ # Pulling in the actual data using the list of file names
+bear<-read.csv(paste0(file.list[i], sep=''))
+
+# Make a function to convert WGS84 to UTM
+# Data was collected in reference to WGS84
+LongLatToUTM<-function(x,y,zone){
+ xy <- data.frame(ID = 1:length(x), X = x, Y = y)
+ coordinates(xy) <- c("X", "Y")
+ proj4string(xy) <- CRS("+proj=longlat +datum=WGS84") 
+ res <- spTransform(xy, CRS(paste("+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",sep='')))
+ return(as.data.frame(res))
+}
+# Define the longitude and latitude as x and y
+x <- bear$GPS.Longitude
+y <- bear$GPS.Latitude
+# Use the function to convert to UTM
+bear.sp = LongLatToUTM(x,y,18)
+# Change the column names
+colnames(bear.sp) <- c("name", "X", "Y")
+bear.sp$name = name
+# Tell R that the X (longitude) and Y (latitude) are the coordinates for the data
+coordinates(bear.sp) <- c("X", "Y")
+# Define the coordinate reference system to UTM
+proj4string(bear.sp) <- CRS("+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+
+
+
+# Generate the MCP
+bear.mcp <- mcp(bear.sp, percent = 99)
+bear.mcp
+# Define the projection string as UTM Zone 18 N
+proj4string(bear.mcp) <- CRS("+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+
+# Add a 200 meter buffer
+library(rgeos)
+buffer <- gBuffer(bear.mcp, width = 200, byid = T)
+proj4string(buffer) <- CRS("+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+
+# Export As a Shapefile
+setwd(path.save)
+fname=as.character(paste(file.list[i]))
+fname <- gsub('.csv', '', fname)
+writeOGR(buffer, "MCP99_w_buffer", fname, driver = "ESRI Shapefile", check_exists=TRUE, overwrite_layer = TRUE)
+}
+```
+
+
+## Generating Random Points {.tabset}
+
+Random points are generated to assess available resources.
+
+
+### Density of Points
+
+To determine how many random points would accurately represent availability we calculated a density of points using 9 bear MCPs. For these 9 bears, we determined the minimum number of points to accurately represent land use within the home range. We calculated the density of points for each bear by dividing the minimum number of points by the area of the home range. The average density of points was determined to be 105.8 points per square kilometer.
+
+
+**Libraries**
+Installing and using the right packages is important to ensure your functions run properly.
+```{r}
+require(sf)
+require(dplyr)
+require(psych)
+library(sf)
+library(raster)
+library(sp)
+library(dismo)
+library(stringr)
+require(stars)
+```
+
+**Set Paths**
+Setting paths is important to make sure you are working with data in the correct file folder. It will vary based on where your personal data is stored.
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
+path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
+path.mcp.data <- paste(path.root, "/Jessica's Data/MCPs/MCP99_w_buffer", sep = "")
+path.use.data <- paste(path.root, "/Jessica's Data/Cleaned Shapefiles", sep = "")
+```
+
+**Pull in MCPs of bears used for exploratory analysis**
+```{r}
+setwd(path.mcp.data)
+Amy2012_MCP <- read_sf("Amy2012.shp")
+Bittersweet2017_MCP <- read_sf("Bittersweet2017.shp")
+BlackHawk2020_MCP <- read_sf("BlackHawk2020.shp")
+Bonnie2013_MCP <- read_sf("Bonnie2013.shp")
+Granby2_2018_MCP <- read_sf("Granby2_2018.shp")
+LittlePrescott2015_MCP <- read_sf("LittlePrescott2015.shp")
+Shirley2020_MCP <- read_sf("Shirley2020.shp")
+Solar2019_MCP <- read_sf("Solar2019.shp")
+Templeton2018_MCP <- read_sf("Templeton2018.shp")
+```
+
+**Convert area from meters squared to sq km**
+Divide the area value by 1e+6
+```{r}
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(Amy2012_MCP) <- 32618
+Amy2012_MCP$area_km_sq <- (st_area(Amy2012_MCP)/1000000)
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(Bittersweet2017_MCP)<- 32618
+Bittersweet2017_MCP$area_km_sq <- (st_area(Bittersweet2017_MCP)/1000000)
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(BlackHawk2020_MCP)<- 32618
+BlackHawk2020_MCP$area_km_sq <- (st_area(BlackHawk2020_MCP)/1000000)
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(Bonnie2013_MCP)<- 32618
+Bonnie2013_MCP$area_km_sq <- (st_area(Bonnie2013_MCP)/1000000)
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(Granby2_2018_MCP)<- 32618
+Granby2_2018_MCP$area_km_sq <- (st_area(Granby2_2018_MCP)/1000000)
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(LittlePrescott2015_MCP)<- 32618
+LittlePrescott2015_MCP$area_km_sq <- (st_area(LittlePrescott2015_MCP)/1000000)
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(Shirley2020_MCP)<- 32618
+Shirley2020_MCP$area_km_sq <- (st_area(Shirley2020_MCP)/1000000)
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(Solar2019_MCP)<- 32618
+Solar2019_MCP$area_km_sq <-(st_area(Solar2019_MCP)/1000000)
+# Define the crs as UTM Zone 18 North then convert MCP area to sq Km
+st_crs(Templeton2018_MCP)<- 32618
+Templeton2018_MCP$area_km_sq <- (st_area(Templeton2018_MCP)/1000000)
+```
+
+**Create a matrix to put minimum number of points, MCP area, and density of points calculated**
+```{r}
+min_points <- matrix(0, nrow = 9, ncol = 3)
+# Make the row names the bear
+rownames(min_points) <- c("Amy2012","Bittersweet2017","BlackHawk2020","Bonnie2013","Granby2_2018","LittlePrescott2015","Shirley2020","Solar2019","Templeton2018")
+# Define the column names
+colnames(min_points) <- c("Min_no_Pts", "area", "Den_of_Pts")
+```
+
+**Add the predetermined minimum number of points to the first row of the matrix**
+```{r}
+# Amy2012
+min_points[1,1] <- 6000
+# Bittersweet2017
+min_points[2,1] <- 6000
+# BlackHawk2020
+min_points[3,1] <- 6000
+# Bonnie2013
+min_points[4,1] <- 4500
+# Granby2_2018
+min_points[5,1] <- 3500
+# LittlePrescott2015
+min_points[6,1] <- 8000
+# Shirley2020
+min_points[7,1] <- 4000
+# Solar2019
+min_points[8,1] <- 6000
+# Templeton2018
+min_points[9,1] <- 8000
+```
+
+**Add the area of each home range to the second column of the matrix**
+```{r}
+min_points[1,2] <- Amy2012_MCP$area_km_sq
+min_points[2,2] <- Bittersweet2017_MCP$area_km_sq
+min_points[3,2] <- BlackHawk2020_MCP$area_km_sq
+min_points[4,2] <- Bonnie2013_MCP$area_km_sq
+min_points[5,2] <- Granby2_2018_MCP$area_km_sq
+min_points[6,2] <- LittlePrescott2015_MCP$area_km_sq
+min_points[7,2] <- Shirley2020_MCP$area_km_sq
+min_points[8,2] <- Solar2019_MCP$area_km_sq
+min_points[9,2] <- Templeton2018_MCP$area_km_sq
+```
+
+**Calculate Density of Points for Each Bear by dividing the minimum number of points by the area of the home range**
+ This will go into the third column of the matrix
+```{r}
+min_points <- as.data.frame(min_points)
+# Density of points = min number of points/area
+min_points$Den_of_Pts <- ((min_points$Min_no_Pts)/(min_points$area))
+min_points
+```
+
+**Calculate the average Density of Points for the 9 bears**
+```{r}
+# Calculate the mean density of points
+Density_of_Points <- mean(min_points$Den_of_Pts)
+print(Density_of_Points)
+```
+
+
+### Generating
+
+Random points need to be generated for each MCP to determine what is available for the bear to use. RSFs compare use points (GPS locations) to available points (random points in each MCP) to determine selection. We used a density of points for each MCP to determine how many random points would accurately represent availability. The density of points was determined to be 105.8 Points per square kilometer.
+
+
+**Libraries**
+Installing and using the right packages is important to ensure your functions run properly.
+```{r}
+require(sf)
+require(dplyr)
+require(psych)
+library(sf)
+library(raster)
+library(sp)
+library(dismo)
+library(stringr)
+require(stars)
+library(rgdal)
+library(readxl)
+```
+
+**Set Paths**
+Setting paths is important to make sure you are working with data in the correct file folder. It will vary based on where your personal data is stored. 
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
+path.LU.data <- paste(path.root, "/Jessica's Data/LULC2016/lclu2016_gdb (1)/lclu_gdb", sep = "")
+path.mcp.data <- paste(path.root, "/Jessica's Data/MCPs/MCP99_w_buffer", sep = "")
+path.use.data <- paste(path.root, "/Jessica's Data/Cleaned Shapefiles", sep = "")
+path.save <- paste(path.root, "/Jessica's Data/Random Points Shapefiles", sep = "")
+```
+
+**List All Bear Files**
+This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
+```{r}
+setwd(path.mcp.data)
+# Pulling in by the pattern lists every file in the folder with that syntax
+# In this case we are using the file extension 
+file.list <- list.files(pattern = "\\.shp$", full.names = FALSE)
+file.list
+```
+
+**Calling in bear info**
+This file contains basic information including bear, name, bear_number, year, and cub_status
+```{r}
+setwd(path.root)
+bear.info <- read_excel("Bear_Files_Summary.xlsx")
+```
+
+**Create a matrix to put the calculated number of random points needed for each bear**
+```{r}
+# Create matix
+no_of_rand_points <- matrix(0, length(file.list), ncol = 3)
+# Define the column names
+colnames(no_of_rand_points) <- c("Bear","Area", "No_of_Rand_Pts")
+```
+
+**Calculate Number of Random Points for Each MCP**
+Density of Points = 105.8 Points Per Sq Km
+```{r}
+for (i in 1:length(file.list)){
+# Calling In MCP Data
+setwd(path.mcp.data)
+# Defining the name of the bear from the base name of the each file in your list
+name <- basename(file.list[i])
+# Using gsub will delete the file extension from the name 
+name <- gsub('.shp', '', name)
+mcp <- read_sf(paste0(file.list[i], sep=''))
+
+
+# Define projection of the MCPs
+st_crs(mcp) <- 32618
+# Convert area from meters squared to sq km
+# Divide the area value by 1e+6
+mcp$area_km_sq <- (st_area(mcp)/1000000)
+
+# Add the information to the maxtrix created earlier
+# Column 1: The name if the bear with year
+no_of_rand_points[i,1] <- name
+# Column 2: The area in square kilometers
+no_of_rand_points[i,2] <- mcp$area_km_sq
+# Column 3: The number of points to generate. Calculated by multiplying the area by the density of points
+no_of_rand_points[i,3] <- (mcp$area_km_sq*105.8)
+
+# List as numeric
+rand_pts <- as.numeric(no_of_rand_points[i,3])
+
+# Generate Random Points
+
+# Rasterize the MCP
+mcp_R <- st_rasterize(mcp %>% dplyr::select(geometry))
+mcp_R <- as(mcp_R, "Raster")
+
+# Create Random Points
+bear_RP <- randomPoints(mcp_R, rand_pts)
+bear_RP <- as.data.frame(bear_RP)
+
+# Define x and y into environments
+x <- bear_RP$x
+y <- bear_RP$y
+# Convert the random points tp spatial frame object
+bear_RP <- st_as_sf(x = bear_RP, coords = c("x", "y"), crs = "+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+
+# Add all columns to match use data
+# Subset the bear info by pulling out the row for the bear iteration 
+bear_info <- bear.info[bear.info$bear == name,]
+
+# Add that information to the generated random points
+bear_RP <-cbind(bear_RP,bear_info)
+
+# Export As a Shapefile
+setwd(path.save)
+fname = as.character(paste(file.list[i]))
+RP <- "RP"
+fname = paste(RP, fname, sep = "_")
+fname <- gsub('.csv', '', fname)
+st_write(bear_RP, fname, driver = "ESRI Shapefile", append=FALSE)
+}
+```
+
+
+## Getting Points Ready for Analysis {.tabset}
+
+There are some final steps that need to be taken to make sure the data are in proper format in order to run an RSF
+
+### Combining Points Shapefiles
+
+Combining the shapefiles of each individual file will allow for easier spatial analysis. All of the individual's information will be kept in the combined files. This way, if you do want to pull information from a specific bear, year, or file, it is still possible to do so.
+
+
+**Set Paths**
+Set the path pick the file folder to pull in your data. It will be different based on where your data is stored.
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
+path.use.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
+path.RP.data <- paste(path.root, "/Jessica's Data/Random Points Shapefiles", sep = "")
+path.save <- paste(path.root, "/Jessica's Data/Combined Clean Data", sep = "")
+```
+
+**Libraries**
+Make sure to install and pull in the libraries you need in order for your code functions to work.
+```{r}
+library(readr)
+library(raster)
+library(rgdal)
+library(sf)
+```
+
+**List All Use Bear Files**
+This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
+```{r}
+setwd(path.use.data)
+# Pulling in by the pattern lists every file in the folder with that syntax
+# In this case we are using the file extension 
+file.list <- list.files(pattern = "\\.csv$", full.names = FALSE)
+file.list
+```
+
+**Pull in all of those files to the environments**
+```{r}
+# Set path
+setwd(path.use.data)
+df <- readr::read_csv(file.list, id = "file_name")
+df
+
+# Add a new column to have the bear as NameYear
+# usisng gsub removes the file extension for each row in the bear column
+df$bear<- gsub('.csv', '',df$bear)
+
+# Get rid of first column which is the file name with the file extension of .csv
+df <- df[, 2:12]
+```
+
+**Make File into Shapefile**
+```{r}
+# Assign the projection string
+# WGS84 - World Geodetic System 1984
+prj.wgs84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs" 
+LatLong <- crs(prj.wgs84)
+
+# WGS 84 / UTM zone 18N
+prj.utmWGSz18 <- "+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+UTM18 <- crs(prj.utmWGSz18)
+
+# Convert the .csv files to an spatial frame object and define its projection
+shapefile <- st_as_sf(df, coords = c("GPS.Longitude", "GPS.Latitude"), crs = LatLong)
+st_crs(shapefile)
+
+
+# Transform into UTM Zone 
+shapefile <- st_transform(shapefile, crs = UTM18)
+st_crs(shapefile) <- 32618
+```
+
+**Repeat these steps for the random points (available) data**
+```{r}
+setwd(path.RP.data)
+# Pulling in by the pattern lists every file in the folder with that syntax
+# In this case we are using the file extension 
+file.list.RP <- list.files(pattern = "\\.shp$", full.names = FALSE)
+file.list.RP
+
+
+# Loop through the list of .shp files and read them into a list of sf objects
+sf_list <- lapply(file.list.RP, st_read)
+
+# You can access each individual sf object in the list using list indexing, e.g. sf_list[[1]] for the first file
+
+# Optionally, you can also combine all the sf objects into a single sf object using `do.call()` and `rbind()`
+sf_combined <- do.call(rbind, sf_list)
+
+# Print summary information of the combined sf object
+print(sf_combined)
+
+# Rename columns to match the use data
+names(sf_combined)[names(sf_combined) == 'br_nmbr'] <- 'bear_number'
+names(sf_combined)[names(sf_combined) == 'cb_stts'] <- 'cub_status'
+
+# Define the coordinate system as UTM zone 18N
+st_crs(sf_combined) <- 32618
+```
+
+**Plot to Double Check**
+```{r}
+setwd("C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Jessica's Data/GIS Layers UTM")
+mass_outline <- st_read("mass_outline.shp")
+
+plot(mass_outline$geometry)
+plot(shapefile$geometry, add = TRUE, col = "blue")
+plot(sf_combined$geometry, add = TRUE, col = "red")
+```
+
+**Save All Combined Data**
+```{r}
+# Set path to where you would like to save the outputs
+setwd(path.save)
+
+# Save Use Points data frame
+write.csv(df, file = "Use_Data.csv")
+
+# Save Use Points Shapefile
+st_write(shapefile, "Use_Points", driver = "ESRI Shapefile", append=FALSE)
+
+# Save Available Points Shapefile
+st_write(sf_combined, "Available_Points", driver = "ESRI Shapefile", append=FALSE)
+```
+
+
+### Clipping Data To MA
+
+The data needs to be clipped to the Massachusetts state boundary. This is because the GIS layers used in this project are all in the extent of the MA border. If points were to extract spacial data outside the MA border, the results would be NA because there isn't spacial data outside the state.  
+
+
+**Set Paths**
+Set the path pick the file folder to pull in your data. It will be different based on where your data is stored. 
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
+path.use.data <- paste(path.root, "/Jessica's Data/Combined Clean Data/USe_Points", sep = "")
+path.RP.data <- paste(path.root, "/Jessica's Data/Combined Clean Data/Available_Points", sep = "")
+path.mass.outline <- paste(path.root, "/Jessica's Data/GIS Layers UTM", sep = "")
+path.save <- paste(path.root, "/Jessica's Data/Combined, Clean, and Clipped Data", sep = "")
+```
+
+**Libraries**
+Make sure to install and pull in the libraries you need in order for your code functions to work.
+```{r}
+library(readr)
+library(raster)
+library(rgdal)
+library(sf)
+library(dplyr)
+```
+
+**Pull in the Use Data shapefile, available data shapefile, and the MA outline shapefile**
+```{r}
+# Use Data
+setwd(path.use.data)
+use_points <- st_read("Use_Points.shp")
+
+# Available Data
+setwd(path.RP.data)
+avail_points <- st_read("Available_Points.shp")
+
+# Massachusetts Outline
+setwd(path.mass.outline)
+ma_outline <- st_read("mass_outline.shp")
+```
+
+**Plot**
+```{r}
+plot(ma_outline$geometry)
+plot(avail_points$geometry, add = TRUE, col = "blue", pch = 20)
+plot(use_points$geometry, add = TRUE, col = "red", pch = 20)
+```
+
+**List the Counts of Use and Available points**
+This will be important later to see how many points are lost by when the data are cropped to the state.
+```{r}
+# Count of use data points (578048)
+use_count_before <- nrow(use_points)
+
+# Count of available data points (i409868)
+avail_count_before <- nrow(avail_points)
+```
+
+**Clip the data points by the mass outline**
+```{r}
+use_clip <- use_points[ma_outline, ]
+
+avail_clip <- avail_points[ma_outline, ]
+```
+
+**Check to see how much data was lost**
+```{r}
+# Count of use data points 
+use_count_after <- nrow(use_clip)
+
+# Count of available data points 
+avail_count_after <- nrow(avail_clip)
+
+# Find out how many points were lost in the process
+print(use_count_before - use_count_after)
+
+print(avail_count_before - avail_count_after)
+```
+
+**Plot to Double Check that the points data is within the mass border**
+```{r}
+plot(ma_outline$geometry)
+plot(avail_clip$geometry, add = TRUE, col = "blue", pch = 20)
+plot(use_clip$geometry, add = TRUE, col = "red", pch = 20)
+```
+
+**Save**
+```{r}
+# Set the path to where you want your outputs saved
+setwd(path.save)
+
+# Save Use Points Shapefile
+st_write(use_clip, "Use_Points", driver = "ESRI Shapefile", append=FALSE)
+
+# Save Available Points Shapefile
+st_write(avail_clip, "Available_Points", driver = "ESRI Shapefile", append=FALSE)
 ```
