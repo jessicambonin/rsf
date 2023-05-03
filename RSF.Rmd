@@ -169,7 +169,7 @@ write.csv(bear, file = fname, row.names = FALSE)
 
 ### Removing Extreme Movements 
 
-Some of the bears took unusual movement paths while collared. The locations of these unusual movements can affect habitat analysis because it defers from normal patterns of behavior. We are not sure why this behavior occurs, but it could be due to an unique pressure put on an individual. For this reason, the data during those extreme movement patterns are removed from the data. The dates for the data being removed were determined manually by identifying the start and finish of the extreme movement path in ArcGIS.
+Some of the bears took unusual movement paths while collared. The locations of these unusual movements can affect habitat analysis because it differs from normal patterns of behavior. We are not sure why this behavior occurs, but it could be due to a unique pressure put on an individual. For this reason, the data during those extreme movement patterns are removed from the data. The dates for the data being removed were determined manually by identifying the start and finish of the extreme movement path in ArcGIS.
 
 
 **Libraries**
@@ -202,7 +202,7 @@ ex_movements <- read.csv("Extreme_Movements.csv")
 # Set the path
 setwd(path.data)
 
-# Call in .csvs for the bears that were deturmined to make an unusal movement path
+# Call in .csvs for the bears that were determined to make an unusual movement path
 BigPrescott2017 <- read.csv("BigPrescott2017.csv")
 Deck2021 <- read.csv("Deck2021.csv")
 Emily2017 <- read.csv("Emily2017.csv")
@@ -340,7 +340,7 @@ write.csv(Templeton2021, file ="Templeton2021.csv", row.names = FALSE)
 
 ## Creating Shapefiles {.tabset}
 
-After the data are cleaned, shapefiles are created to have the data as spacially referenced. This takes the data for each GIS location and assigns it to a spacially referenced point. For this project, we want all data to be referenced to UTM Zone 18 North. This data was collected using World Geodetic System 1984. Note: CRS stands for Coordinate Reference System
+After the data are cleaned, shapefiles are created to have the data as spatially referenced. This takes the data for each GIS location and assigns it to a spatially referenced point. For this project, we want all data to be referenced to UTM Zone 18 North. This data was collected using World Geodetic System 1984. Note: CRS stands for Coordinate Reference System.
 
 
 **Set Paths**
@@ -417,7 +417,7 @@ st_write(bear_UTM, fname, driver = "ESRI Shapefile", append=FALSE)
 
 ## MCPs
 
-The home range of each bear will be determined using an Minimum Convex Polygon. We will generate a 99% MCP (meaning generating an border around 99% of the data points). This ensures that if any extreme fixes were not removed during data cleaning, the home range calculation will not include the area where that point lies. We will also include a 200 meter buffer around the MCP. This is to include the area around the use locations that is still available for the bear to go. We chose 200 meters because that is how far a bear can travel in the allotted amount of time (talk about fixes and movement steps).
+The home range of each bear will be determined using a Minimum Convex Polygon. We will generate a 99% MCP (meaning generating a border around 99% of the data points). This ensures that if any extreme fixes were not removed during data cleaning, the home range calculation will not include the area where that point lies. We will also include a 200-meter buffer around the MCP. This is to include the area around the use locations that is still available for the bear to go. We chose 200 meters because it is the average step length between the 45-minute time intervals.
 
 
 **Libraries**
@@ -763,7 +763,7 @@ st_write(bear_RP, fname, driver = "ESRI Shapefile", append=FALSE)
 
 ## Getting Points Ready for Analysis {.tabset}
 
-There are some final steps that need to be taken to make sure the data are in proper format in order to run an RSF
+There are some final steps that need to be taken to make sure the data are in proper format in order to run an RSF.
 
 ### Combining Points Shapefiles
 
@@ -806,7 +806,7 @@ df <- readr::read_csv(file.list, id = "file_name")
 df
 
 # Add a new column to have the bear as NameYear
-# usisng gsub removes the file extension for each row in the bear column
+# using gsub removes the file extension for each row in the bear column
 df$bear<- gsub('.csv', '',df$bear)
 
 # Get rid of first column which is the file name with the file extension of .csv
@@ -890,7 +890,7 @@ st_write(sf_combined, "Available_Points", driver = "ESRI Shapefile", append=FALS
 
 ### Clipping Data To MA
 
-The data needs to be clipped to the Massachusetts state boundary. This is because the GIS layers used in this project are all in the extent of the MA border. If points were to extract spacial data outside the MA border, the results would be NA because there isn't spacial data outside the state.  
+The data needs to be clipped to the Massachusetts state boundary. This is because the GIS layers used in this project are all in the extent of the MA border. If points were to extract spatial data outside the MA border, the results would be NA because there isn't spatial data outside the state.  
 
 
 **Set Paths**
