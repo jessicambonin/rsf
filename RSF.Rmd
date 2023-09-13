@@ -26,9 +26,9 @@ The data we are using comes from GPS collars. This means there are rows within t
 Setting paths is important to make sure you are working with data in the correct file folder. 
 It will vary based on where your personal data is stored
 ```{r}
-path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
-path.data <- paste(path.root, "/Jessica's Data/Raw Bear Data (Organized)", sep = "")
-path.new.collars <- paste(path.data, "/New Collars", sep = "")
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.data <- paste(path.root, "/Raw Data", sep = "")
+path.info <- paste(path.root, "/Bear Information", sep = "")
 ```
 
 **Libraries**
@@ -40,7 +40,7 @@ library(lubridate)
 **List All Bear Files**
 This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
 ```{r}
-setwd(path.new.collars)
+setwd(path.data)
 # Pulling in by the pattern lists every file in the folder with that syntax
 # In this case we are using the file extension 
 file.list <- list.files(pattern = "\\.csv$", full.names = FALSE)
@@ -53,7 +53,7 @@ Doing this in a loop allows R to run the code for each file one after the other.
 for (i in 1:length(file.list)){
 # Calling In Bear Data
   # Set the path to pull data from the correct folder
-setwd(path.new.collars)
+setwd(path.data)
   # Defining the name of the bear from the base name of the each file in your list
 name<- basename(file.list[i])
  # Pulling in the actual data using the list of file names
@@ -63,7 +63,7 @@ bear<-read.csv(paste0(file.list[i], sep=''))
 
 # Calling In Organized Excel
  # Set the path to pull data from the correct folder
-setwd(path.root)
+setwd(path.info)
  # This file holds information about the bears reproductive status, fix interval, and den exit and emergence
 all.bear.info <- read.csv("Bear_Files_Organization.csv")
 
@@ -139,6 +139,11 @@ bear$short.fix.time <- as.Date(bear$short.fix.time)
 # Add a column to the data for season using the season.lut lookup table function
 bear$season <- season.lut(as.numeric(format(bear$short.fix.time,format="%j")))
 
+# Remove winter rows from data
+bear <- bear[bear$season != "Winter", ]
+
+# Remove rows with NAs for season
+bear <- bear[!is.na(bear$season),]
 
 # Add Bear Info to Bear File
 bear$bear <- bear.info$bear
@@ -159,7 +164,7 @@ keep.col <- c("bear", "name", "bear_number", "year", "cub_status", "GPS.Fix.Time
 bear <- bear[keep.col]
 
 # When it is finalized, save to "Bear Data Cleaned"
-path.cleaned <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Jessica's Data/Bear Data Cleaned"
+path.cleaned <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data/Bear Data Cleaned"
 setwd(path.cleaned)
 fname=as.character(paste(file.list[i]))
 #create output file with above name
@@ -182,10 +187,10 @@ library(dplyr)
 Setting paths is important to make sure you are working with data in the correct file folder.
 It will vary based on where your personal data is stored.
 ```{r}
-path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
-path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
-path.ex.mov <- paste(path.root, "/Jessica's Data/Notes_and_Ideas", sep = "")
-path.save <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.data <- paste(path.root, "/Bear Data Cleaned", sep = "")
+path.ex.mov <- paste(path.root, "/Bear Information", sep = "")
+path.save <- paste(path.root, "/Bear Data Cleaned", sep = "")
 ```
 
 **Call in Extreme Movement Data**
@@ -346,16 +351,24 @@ After the data are cleaned, shapefiles are created to have the data as spatially
 **Set Paths**
 Set the path pick the file folder to pull in your data. It will be different based on where your data is stored.
 ```{r}
-path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
-path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.data <- paste(path.root, "/Bear Data Cleaned", sep = "")
+path.save <- paste(path.root, "/Cleaned Bear Data Shapefiles", sep = "")
 ```
 
 **Libraries**
 Make sure to install and pull in the libraries you need in order for your code functions to work.
 ```{r}
-library(sf)
-library(rgdal)
+require(sf)
+require(dplyr)
+require(psych)
 library(raster)
+library(sp)
+library(dismo)
+library(stringr)
+require(stars)
+library(rgdal)
+library(readxl)
 ```
 
 **Define Projection Strings**
@@ -408,12 +421,14 @@ st_crs(bear_UTM) <- 32618
 
 
 # Export As a Shapefile
-path.save <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Jessica's Data/Cleaned Shapefiles"
 setwd(path.save)
 fname=as.character(paste(file.list[i]))
+fname = paste(fname, sep = "_")
+fname <- gsub('.csv', '', fname)
 st_write(bear_UTM, fname, driver = "ESRI Shapefile", append=FALSE)
 }
 ```
+
 
 ## MCPs
 
@@ -432,9 +447,8 @@ library(sf)
 **Set Paths**
 Setting paths is important to make sure you are working with data in the correct file folder. It will vary based on where your personal data is stored.
 ```{r}
-path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
-path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
-path.save <- paste(path.root, "/Jessica's Data/MCPs", sep = "")
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.data <- paste(path.root, "/Bear Data Cleaned", sep = "")
 ```
 
 **List All Bear Files**
@@ -493,10 +507,10 @@ buffer <- gBuffer(bear.mcp, width = 200, byid = T)
 proj4string(buffer) <- CRS("+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
 
 # Export As a Shapefile
-setwd(path.save)
+setwd(path.root)
 fname=as.character(paste(file.list[i]))
 fname <- gsub('.csv', '', fname)
-writeOGR(buffer, "MCP99_w_buffer", fname, driver = "ESRI Shapefile", check_exists=TRUE, overwrite_layer = TRUE)
+writeOGR(buffer, "MCPs", fname, driver = "ESRI Shapefile", check_exists=TRUE, overwrite_layer = TRUE)
 }
 ```
 
@@ -517,7 +531,6 @@ Installing and using the right packages is important to ensure your functions ru
 require(sf)
 require(dplyr)
 require(psych)
-library(sf)
 library(raster)
 library(sp)
 library(dismo)
@@ -528,10 +541,9 @@ require(stars)
 **Set Paths**
 Setting paths is important to make sure you are working with data in the correct file folder. It will vary based on where your personal data is stored.
 ```{r}
-path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
-path.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
-path.mcp.data <- paste(path.root, "/Jessica's Data/MCPs/MCP99_w_buffer", sep = "")
-path.use.data <- paste(path.root, "/Jessica's Data/Cleaned Shapefiles", sep = "")
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.data <- paste(path.root, "/Bear Data Cleaned", sep = "")
+path.mcp.data <- paste(path.root, "/MCPs", sep = "")
 ```
 
 **Pull in MCPs of bears used for exploratory analysis**
@@ -652,7 +664,6 @@ Installing and using the right packages is important to ensure your functions ru
 require(sf)
 require(dplyr)
 require(psych)
-library(sf)
 library(raster)
 library(sp)
 library(dismo)
@@ -665,11 +676,10 @@ library(readxl)
 **Set Paths**
 Setting paths is important to make sure you are working with data in the correct file folder. It will vary based on where your personal data is stored. 
 ```{r}
-path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
-path.LU.data <- paste(path.root, "/Jessica's Data/LULC2016/lclu2016_gdb (1)/lclu_gdb", sep = "")
-path.mcp.data <- paste(path.root, "/Jessica's Data/MCPs/MCP99_w_buffer", sep = "")
-path.use.data <- paste(path.root, "/Jessica's Data/Cleaned Shapefiles", sep = "")
-path.save <- paste(path.root, "/Jessica's Data/Random Points Shapefiles", sep = "")
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.mcp.data <- paste(path.root, "/MCPs", sep = "")
+path.info <- paste(path.root, "/Bear Information", sep = "")
+path.save <- paste(path.root, "/Availability Points Shapefiles", sep = "")
 ```
 
 **List All Bear Files**
@@ -685,7 +695,7 @@ file.list
 **Calling in bear info**
 This file contains basic information including bear, name, bear_number, year, and cub_status
 ```{r}
-setwd(path.root)
+setwd(path.info)
 bear.info <- read_excel("Bear_Files_Summary.xlsx")
 ```
 
@@ -773,10 +783,10 @@ Combining the shapefiles of each individual file will allow for easier spatial a
 **Set Paths**
 Set the path pick the file folder to pull in your data. It will be different based on where your data is stored.
 ```{r}
-path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
-path.use.data <- paste(path.root, "/Jessica's Data/Bear Data Cleaned", sep = "")
-path.RP.data <- paste(path.root, "/Jessica's Data/Random Points Shapefiles", sep = "")
-path.save <- paste(path.root, "/Jessica's Data/Combined Clean Data", sep = "")
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.use.data <- paste(path.root, "/Bear Data Cleaned", sep = "")
+path.RP.data <- paste(path.root, "/Availability Points Shapefiles", sep = "")
+path.save <- paste(path.root, "/Combined Data/Combined Data", sep = "")
 ```
 
 **Libraries**
@@ -851,8 +861,6 @@ sf_list <- lapply(file.list.RP, st_read)
 # Optionally, you can also combine all the sf objects into a single sf object using `do.call()` and `rbind()`
 sf_combined <- do.call(rbind, sf_list)
 
-# Print summary information of the combined sf object
-print(sf_combined)
 
 # Rename columns to match the use data
 names(sf_combined)[names(sf_combined) == 'br_nmbr'] <- 'bear_number'
@@ -864,7 +872,7 @@ st_crs(sf_combined) <- 32618
 
 **Plot to Double Check**
 ```{r}
-setwd("C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Jessica's Data/GIS Layers UTM")
+setwd("C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data/GIS Layers")
 mass_outline <- st_read("mass_outline.shp")
 
 plot(mass_outline$geometry)
@@ -896,11 +904,11 @@ The data needs to be clipped to the Massachusetts state boundary. This is becaus
 **Set Paths**
 Set the path pick the file folder to pull in your data. It will be different based on where your data is stored. 
 ```{r}
-path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General"
-path.use.data <- paste(path.root, "/Jessica's Data/Combined Clean Data/USe_Points", sep = "")
-path.RP.data <- paste(path.root, "/Jessica's Data/Combined Clean Data/Available_Points", sep = "")
-path.mass.outline <- paste(path.root, "/Jessica's Data/GIS Layers UTM", sep = "")
-path.save <- paste(path.root, "/Jessica's Data/Combined, Clean, and Clipped Data", sep = "")
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.use.data <- paste(path.root, "/Combined Data/Combined Data/Use_Points", sep = "")
+path.RP.data <- paste(path.root, "/Combined Data/Combined Data/Available_Points", sep = "")
+path.mass.outline <- paste(path.root, "/GIS Layers", sep = "")
+path.save <- paste(path.root, "/Combined Data/Combined Data Clipped to MA", sep = "")
 ```
 
 **Libraries**
@@ -983,4 +991,786 @@ st_write(use_clip, "Use_Points", driver = "ESRI Shapefile", append=FALSE)
 
 # Save Available Points Shapefile
 st_write(avail_clip, "Available_Points", driver = "ESRI Shapefile", append=FALSE)
+```
+
+
+## Extracting Data {.tabset}
+
+Extracting distance to nearest structure was done using the "near" tool in ArcGIS.This step was done after clipping to MA and data were saved as shapefiles in "Combined, Clipped, Near" folder.
+
+
+### Urbanization Gradient
+
+To explore if bears selection changes across varying levels of urbanization we calculated the percent impervious surface plus developed open space for each bear’s home range. This is one of the variables that will go into the model.
+
+**Libraries**
+Make sure to install and pull in the libraries you need in order for your code functions to work.
+```{r}
+library(raster)
+library(sp)
+library(adehabitatHR)
+library(adehabitatHS)
+library(reshape2)
+library(sf)
+library(writexl)
+```
+
+**Set Paths**
+Setting paths is important to make sure you are working with data in the correct file folder. It will vary based on where your personal data is stored.
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.mcp <- paste(path.root, "/MCPs", sep = "")
+path.GIS <- paste(path.root, "/GIS Layers", sep = "")
+``` 
+
+**Bring in the land use data**
+```{r}
+setwd(path.GIS)
+lulc2016 <-raster("LULC2016.tif")
+```
+
+**Examine the raster data**
+```{r}
+# Check the coordinate reference system
+print(crs(lulc2016))
+
+# Define the projection string for UTM Zone 18
+UTM18 <- CRS("+init=epsg:32618")
+
+# Define land use coordinate system
+crs(lulc2016) <- UTM18
+print(crs(lulc2016))
+
+# Plot to look at data
+plot(lulc2016)
+```
+
+**Reclassify map into fewer land cover categories**
+```{r}
+setwd(path.GIS)
+classification <- read.csv("Land_Cover_Reclass.csv")
+head(classification)
+class <- as.matrix(classification[,c(1,3)])
+land_sub <- reclassify(lulc2016, rcl = class)
+plot(land_sub)
+```
+
+**Create a data frame**
+```{r}
+data <- data.frame()
+```
+
+**List All MCP Files**
+This allows you to pull in all of the file names from one file folder. It is important to note that this is not the data itself, just the names of the files in the folder.
+```{r}
+setwd(path.mcp)
+file.list <- list.files(pattern = "\\.shp$", full.names = FALSE)
+file.list
+```
+
+**Calculate the percent developed for each MCP** Extract all of the raster values in each MCP. Then add the number of raster values of 5 (impervious surface) and 4 (developed open space). Divide that by the total number of values and multiply by 100.
+```{r}
+for (i in 1:length(file.list)){
+# Calling In MCP Data
+setwd(path.mcp)
+# Defining the name of the bear from the base name of the each file in your list
+bear <- basename(file.list[i])
+# Using gsub will delete the file extension from the name 
+bear <- gsub('.shp', '', bear)
+mcp <- read_sf(paste0(file.list[i], sep=''))
+
+# Convert
+mcp <- sf:::as_Spatial(mcp$geometry)
+
+# Extract values of raster cells within polygon
+raster_values <- raster::extract(land_sub, mcp)
+
+# Convert raster values to raster layer
+raster_values <- unlist(raster_values)
+
+# Remove any values of na
+raster_values <- na.omit(raster_values)
+
+# Calculate the percent of impervious surface (raster value = 5) plus developed open space (raster value = 4) 
+Percent_Impervious <- (length(raster_values[(raster_values == 5)|(raster_values == 4)]))/(length(raster_values))*100
+
+
+output = c(bear, Percent_Impervious)
+data = rbind(data, output)
+colnames (data) <- c("Bear", "Percent_Developed")
+}
+```
+
+**Make sure that the columns are the correct class**
+```{r}
+# Copy column and remove last 4 digits (Year)
+data$name <- substr(data$Bear, 1, nchar(data$Bear) - 4)
+
+data$name <- as.character(data$name)
+
+data$Percent_Developed <- as.numeric(data$Percent_Developed)
+```
+
+**Save** Save this information as an excel in order to bring in later.
+```{r}
+path.save <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data/Bear Information"
+setwd(path.save)
+write_xlsx(data, "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data/Bear Information/Percent_Developed.xlsx")
+```
+
+
+### Percent Area Covered by Building Structures 
+
+I calculated the percent area of building structures within a buffer of 100 meters around each point. The size of the buffer was determined by using the average step length for the 45-minute interval as the diameter for the buffer. The centroid of each of the building structures were extracted and then spatially joined to the buffered points. 
+
+**Libraries**
+Make sure to install and pull in the libraries you need in order for your code functions to work.
+```{r}
+library(rgdal)
+library(raster)
+library(sf)
+library(adehabitatHR)
+library(adehabitatHS)
+library(reshape2)
+library(dplyr)
+```
+
+**Set Paths**
+Set the path pick the file folder to pull in your data \* It will be different based on where your data is stored
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.data <- paste(path.root, "/Combined Data/Combined, Clipped, Near", sep = "")
+path.mcp <- paste(path.root, "/MCPs", sep = "")
+path.GIS <- paste(path.root, "/GIS Layers", sep = "")
+path.save <- paste(path.root, "/Combined Data/Combined, Clipped, Near, Percent Str", sep = "")
+```
+
+**Bring in the building structures layer**
+```{r}
+# Read building structures polygon shapefile
+setwd(path.GIS)
+bld_str <- st_read("building_structures.shp") 
+
+# Check Class and CRS
+class(bld_str)
+crs(bld_str)
+```
+
+**Find the centroid of each building polygon**
+```{r}
+# Extract centroids and convert to points
+bld_str_points <- st_centroid(bld_str)
+```
+
+**Bring In Use and Available Point Data**
+```{r}
+setwd(path.data)
+# Use Points
+use_data <- read_sf("Use_Points.shp")
+# Available Points
+avail_data <- read_sf("Available_Points.shp")
+```
+
+**Create buffers for use and availability each point**
+Make sure there are the same amount of buffers as there are points. Add a FID to each buffer. 
+```{r}
+# Buffer the use location point by 100 meters
+use_buffers <- st_buffer(use_data, dist = 100)
+# Check to make sure there are the same amount of buffers as points
+nrow(use_data)
+nrow(use_buffers)
+# Add buffer FID 
+use_buffers$Buffer_FID <- 1:nrow(use_buffers)
+print(use_buffers$Buffer_FID)
+
+# Buffer the available location point by 100 meters
+avail_buffers <- st_buffer(avail_data, dist = 100)
+# Check to make sure there are the same amount of buffers as points
+nrow(avail_data)
+nrow(avail_buffers)
+# Add Buffer FID
+avail_buffers$Buffer_FID <- 1:nrow(avail_buffers)
+```
+
+**Join the use data and the building structure centroid points**
+The area for the building structures is still attached to these points as SHAPE_Area.
+```{r}
+# Perform a spatial join between `use_buffers` and `bld_str_points`
+joined_use <- st_join(use_buffers, bld_str_points)
+head(joined_use)
+```
+
+**Turn the NAs to 0 for SHAPE_Area. This will allow us to summarize area of building structures in each buffer even if there is no building in the buffer.**
+```{r}
+joined_use$SHAPE_Area[is.na(joined_use$SHAPE_Area)] <- 0
+```
+
+**Sum the area if the building structures by the Buffer ID. This will add up all of the building structures area within each buffer.** 
+```{r}
+summary_use <- aggregate(SHAPE_Area ~ Buffer_FID, data = joined_use, FUN = sum)
+head(summary_use)
+```
+
+**Calculate the percentage of building structure in each buffer**
+Divide the building structures area by the area of the buffer (the area of a circle with a 100 m radius is 31415.93) then multiply by 100
+```{r}
+summary_use$Percent_Bld_Str <- ((summary_use$SHAPE_Area/31415.93)*100)
+```
+
+**Add the percentage of building structure to the Use data**
+```{r}
+use_data <- cbind(use_data, summary_use$Percent_Bld_Str)
+colnames(use_data)[which(names(use_data) == "summary_use.Percent_Bld_Str")] <-"Percent_Bld_Str"
+```
+
+**Export as a Shapefile**
+```{r}
+setwd(path.save)
+st_write(use_data, "Use_Points", driver = "ESRI Shapefile", append=FALSE)
+```
+
+**Repeat for available points data**
+Join the available data and the building structure centroid points. The area for the building structures is still attached to these points as SHAPE_Area. 
+```{r}
+# Perform a spatial join between `use_buffers` and `bld_str_points`
+joined_avail <- st_join(avail_buffers, bld_str_points)
+head(joined_avail)
+```
+
+**Turn the NAs to 0 for SHAPE_Area**
+This will allow us to summarize area of building structures in each buffer even if there is no building in the buffer.
+```{r}
+joined_avail$SHAPE_Area[is.na(joined_avail$SHAPE_Area)] <- 0
+```
+
+**Sum the area if the building structures by the Buffer ID**
+This will add up all of the building structures area within each buffer.
+```{r}
+summary_avail <- aggregate(SHAPE_Area ~ Buffer_FID, data = joined_avail, FUN = sum)
+head(summary_avail)
+```
+
+**Calculate the percentage of building structure in each buffer**
+Divide the building structures area by the area of the buffer (the area of a circle with a 100 m radius is 31415.93) then multiply by 100
+```{r}
+summary_avail$Percent_Bld_Str <- ((summary_avail$SHAPE_Area/31415.93)*100)
+```
+
+**Add the percentage of building structure to the avail data**
+```{r}
+avail_data <- cbind(avail_data, summary_avail$Percent_Bld_Str)
+colnames(avail_data)
+colnames(avail_data)[which(names(avail_data) == "summary_avail.Percent_Bld_Str")] <-"Percent_Bld_Str"
+```
+
+**Export as a Shapefile**
+```{r}
+setwd(path.save)
+st_write(avail_data, "Avail_Points", driver = "ESRI Shapefile", append=FALSE)
+```
+
+### Land Use
+
+
+
+
+**Set Paths**
+Set the path pick the file folder to pull in your data. It will be different based on where your data is stored
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.use.data <- paste(path.root, "/Combined Data/Combined, Clipped, Near, Percent Str/Use_Points", sep = "")
+path.avail.data <- paste(path.root, "/Combined Data/Combined, Clipped, Near, Percent Str/Avail_Points", sep = "")
+path.GIS <- paste(path.root, "/GIS Layers", sep = "")
+path.save <- paste(path.root, "/Final Data", sep = "")
+```
+
+
+
+**Libraries**
+Make sure to install and pull in the libraries you need in order for your code functions to work
+```{r}
+library(readr)
+library(raster)
+library(rgdal)
+library(sf)
+library(dplyr)
+library(writexl)
+```
+
+**Pull in the Use Data shapefile and available data shapefile**
+```{r}
+# Use Data
+setwd(path.use.data)
+use_points <- st_read("Use_Points.shp")
+# Available Data
+setwd(path.avail.data)
+avail_points <- st_read("Avail_Points.shp")
+```
+
+**Bring in the land cover 2016 data**
+```{r}
+# Set Path
+setwd(path.GIS)
+lulc2016 <-raster("LULC2016.tif")
+```
+
+**Examine the raster data**
+```{r}
+# Check the coordinate reference system
+print(crs(lulc2016))
+
+# Define the projection string for UTM Zone 18
+UTM18 <- CRS("+init=epsg:32618")
+
+# Define land use coordinate system
+crs(lulc2016) <- UTM18
+print(crs(lulc2016))
+```
+
+**Bring in file that cintains new land cover variables and classifications**
+```{r}
+setwd(path.GIS)
+# This file has the new land cover variable and description
+classification_cover <- read.csv("Land_Cover_Reclass.csv")
+head(classification_cover)
+```
+
+**Reclassify map into fewer land cover categories**
+```{r}
+class <- as.matrix(classification_cover[,c(1,3)])
+land_cover <- reclassify(lulc2016, rcl = class)
+```
+
+**Buffer the quabbin and get rid of available points in the quabbin to run again and see if there is a major difference in selection**
+```{r}
+# Read in quabbin shapefile
+setwd(path.GIS)
+quabbin <- read_sf("quabbin.shp")
+crs(quabbin)
+
+
+#Buffer by -50 meters, this goes 50 meter into the quabbin from the shore
+# Add a -50 meter buffer
+buffer <- st_buffer(quabbin, dist = -50)
+
+
+# Change back to spatial data frame
+buffer <- st_as_sf(buffer)
+
+# Assign IDs to each point
+avail_points$ID <- 1:nrow(avail_points)
+ 
+
+# Select all of the points inside the quabbin, we will get rid of these
+remove_points <- st_join(buffer, avail_points)
+nrow(remove_points)
+
+# Remove the points inside the quabbin and make sure the numbers are adding up correctly to ensure we aren't making a major mistake
+# Remove points that were joined with the polygon
+filtered_points <- avail_points[!avail_points$ID %in% remove_points$ID, ]
+nrow(filtered_points)
+
+# Check
+nrow(avail_points)
+nrow(filtered_points)+nrow(remove_points)
+```
+
+**Extract Land Cover Data to Points**
+Remember the use_data already has all of the bear information, distance to nearest structure, and percent building structure for each point.
+```{r}
+use <- extract(land_cover, use_points)
+avail <- extract(land_cover, filtered_points)
+```
+
+**Convert matrices into dataframes**
+```{r}
+# Convert the matrix or array into a data frame
+use <- as.data.frame(use)
+head(use)
+
+avail <- as.data.frame(avail)
+head(avail)
+```
+
+**Add Extracted Data to the Use and Available Data Dataframes**
+This extracted data now has land cover code, distance to nearest structure, and percent building structure. Change the column names to be more clear.
+```{r}
+# Combine
+use <- data.frame(cbind(use_points, use))
+head(use)
+# Change column names
+names(use)[names(use) == 'Prc_B_S'] <- 'perc_bld_str'
+names(use)[names(use) == 'NEAR_DI'] <- 'dis2str'
+names(use)[names(use) == 'use'] <- 'landcover'
+colnames(use)
+
+# Combine
+avail <- data.frame(cbind(filtered_points, avail))
+head(avail)
+# Change Column names
+names(avail)[names(avail) == 'Prc_B_S'] <- 'perc_bld_str'
+names(avail)[names(avail) == 'NEAR_DI'] <- 'dis2str'
+names(avail)[names(avail) == 'avail'] <- 'landcover'
+colnames(avail)
+```
+
+**Check to see how many and what points have no land cover data in use and available**
+```{r}
+# Use
+use_before <- nrow(use)
+# Remove NAs
+use <- use[!is.na(use$landcover),]
+# Number of rows lost to NA
+use_before-nrow(use)
+
+# Available
+avail_before <- nrow(avail)
+# Remove NAs
+avail <- avail[!is.na(avail$landcover),]
+# Number of rows lost to NA
+avail_before-nrow(avail)
+```
+
+**Change the reproductive status "unknown" rows for broadbrook2014 to "none"**
+```{r}
+# Use
+# Conditions
+condition1 <- use$bear == "Broadbrook2014"
+condition2 <- use$cb_stts == "unknown"
+
+# Changing row value based on conditions
+use$cb_stts[condition1 & condition2] <- "none"
+
+# Available
+# Conditions
+condition1 <- avail$bear == "Broadbrook2014"
+condition2 <- avail$cb_stts == "unknown"
+
+# Changing row value based on conditions
+avail$cb_stts[condition1 & condition2] <- "none"
+```
+
+**Change the reproductive status "unknown" rows for May2013 to "none"**
+```{r}
+# Use
+# Conditions
+condition1 <- use$bear == "May2013"
+condition2 <- use$cb_stts == "unknown"
+
+# Changing row value based on conditions
+use$cb_stts[condition1 & condition2] <- "none"
+
+# Available
+# Conditions
+condition1 <- avail$bear == "May2013"
+condition2 <- avail$cb_stts == "unknown"
+
+# Changing row value based on conditions
+avail$cb_stts[condition1 & condition2] <- "none"
+```
+
+**Examine count of use points by seasons**
+```{r}
+seasons_sum <- use %>%
+  group_by(season) %>%
+  summarise(count = n())
+head(seasons_sum)
+```
+
+**Remove NAs in data**
+There were no NAs but better to do this step anyways
+```{r}
+# Remove NAs
+use <- use[!is.na(use$season),]
+```
+
+**Save**
+```{r}
+# Set the path to where you want your outputs saved
+setwd(path.save)
+
+# Save Use Points Shapefile
+st_write(use, "Use_Points", driver = "ESRI Shapefile", append=FALSE)
+
+# Save Available Points Shapefile
+st_write(avail, "Available_Points", driver = "ESRI Shapefile", append=FALSE)
+```
+
+## Models {.tabset}
+
+### Correlation, Multicollinearity, and AICs
+
+**Libraries**
+Make sure to install and pull in the libraries you need in order for your code functions to work
+```{r}
+library(terra)
+library(raster)
+library(sf)
+library(adehabitatHR)
+library(adehabitatHS)
+library(reshape2)
+library(dplyr)
+library(writexl)
+library(readxl)
+```
+
+**Set Paths**
+Set the path pick the file folder to pull in your data. It will be different based on where your data is stored
+```{r}
+path.root <- "C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data"
+path.use.data <- paste(path.root, "/Final Data/Use_Points", sep = "")
+path.avail.data <- paste(path.root, "/Final Data/Available_Points", sep = "")
+path.gradient <- paste(path.root, "/Bear Information", sep = "")
+```
+
+**Bring In Use and Available Point Data**
+This data contains the bear information and distance to nearest structure
+```{r}
+# Use Points
+setwd(path.use.data)
+use_data <- read_sf("Use_Points.shp")
+# Available Points
+setwd(path.avail.data)
+avail_data <- read_sf("Available_Points.shp")
+```
+
+**Bring in the information that is the percent developed in the home range**
+The value we are using for urbanization
+```{r}
+setwd(path.gradient)
+gradient <- read_excel("Percent_Developed.xlsx")
+gradient <- gradient[ ,1:2]
+colnames(gradient) <- c("bear", "HR_perc_dev")
+```
+
+**Add the urbanization value to the points data sets**
+```{r}
+use_data <- merge(use_data, gradient, by = "bear", all = TRUE)
+avail_data <- merge(avail_data, gradient, by = "bear", all = TRUE)
+```
+
+**Convert the reproductive status of "yearling" to "none"**
+This will give us 2 options for reproductive status "none" and "newborn"
+```{r}
+# Change row values from "yearling" to "none"
+use_data$cb_stts <- ifelse(use_data$cb_stts == "yearling", "none", use_data$cb_stts)
+avail_data$cb_stts <- ifelse(avail_data$cb_stts == "yearling", "none", avail_data$cb_stts)
+```
+
+**Check the column names to see what data we have**
+Note that the available data does not have season.
+```{r}
+colnames(use_data) 
+colnames(avail_data)
+```
+
+**Create a dataframe to run in model**
+This final data frame will be combined use and available points. The bear number will be used as the identifier for each point. The covariates will include land cover, nearest distance to structure, percent building structure, and use/availability as a binomial (use = 1, available = 0)
+```{r}
+# Subset the data by bear number and covariates
+# br_nmbr is the bear number / bear ID
+# dis2str is the distance to nearest structure
+# landcvr is the reclassified lad cover
+# prc_bl_ is the percent building structure in the buffered point
+use <- subset(use_data, select = c(br_nmbr, year, cb_stts, season, landcvr, dis2str, prc_bl_, HR_perc_dev))
+avail <- subset(avail_data, select = c(br_nmbr, year, cb_stts, landcvr, dis2str, prc_bl_, HR_perc_dev))
+```
+
+**Assign random seasons to availability points**
+This is necessary when running a glm because all columns must be the same between use and available points
+```{r}
+avail$season <- rep(c("Summer", "Fall", "Spring"), length.out = nrow(avail))
+# Change the order of columns to match use.2
+avail <- avail[, c("br_nmbr", "year", "cb_stts", "season", "landcvr", "dis2str", "prc_bl_", "HR_perc_dev")]
+```
+
+**Combine the use and available data into one data frame**
+```{r}
+# Create data frame
+# This adds use as a binomial
+use.cov <- data.frame(use[,1:8], use = 1)
+back.cov <- data.frame(avail[,1:8], use = 0)
+# Combine the use and available points data to create one large dataframe
+all.cov <- data.frame(rbind(use.cov, back.cov))
+# Check the class of the landcover
+class(all.cov$landcvr)
+# Convert to factor
+all.cov$landcvr <- as.factor(all.cov$landcvr)
+class(all.cov$landcvr)
+# Check the columns of the dataframe
+colnames(all.cov)
+```
+
+**Correlation refers to the linear relationship between 2 variables**
+Can be evaluated using	correlation coefficient.
+A value of r close to -1: means that there is negative correlation between the variables (when one increases the other decreases and vice versa).
+A value of r close to 0: indicates that the 2 variables are not correlated (no linear relationship exists between them).
+A value of r close to 1: indicates a positive linear relationship between the 2 variables (when one increases, so does the other).
+```{r}
+# All varibables must be numeric to run cor()
+all.cov$landcvr <- as.numeric(all.cov$landcvr)
+class(all.cov$landcvr)
+class(all.cov$dis2str)
+class(all.cov$prc_bl_)
+
+cor(all.cov[, 5:7])
+
+# Based off these values, there is not significant correlation between any 2 variables, so all variables can be used in the model
+
+all.cov$landcvr <- as.factor(all.cov$landcvr)
+```
+
+**Run a base model** to be able to compare model fit with different iterations of models with interactions. Use is the response variable, 0 is the intercept (used here to mean no selection). The fixed effects in the models included land cover, distance to nearest structure, and percent building structure area within a buffered point. Bear number is a random effect to account for variability of behavior among different bears. The family is binomial because the response variable (use) is either 1 or 0.
+
+**Collinearity** refers to a problem when running a regression model where 2 or more independent variables (a.k.a. predictors) have a strong linear relationship. Can be evaluated using correlation matrix or VIF.
+**Multicollinearity** is a special case of collinearity where a strong linear relationship exists between 3 or more independent variables even if no pair of variables has a high correlation. Can be evaluated using VIF.
+
+VIF measures the strength of correlation between predictor variables in a model. It takes on a value between 1 and positive infinity.
+VIF = 1: There is no correlation between a given predictor variable and any other predictor variables in the model.
+VIF between 1 and 5: There is moderate correlation between a given predictor variable and other predictor variables in the model.
+VIF > 5: There is severe correlation between a given predictor variable and other predictor variables in the model.
+```{r}
+library(car)
+
+# define multiple linear regression model
+model_all <- glm(use ~ landcvr + dis2str + prc_bl_, data = all.cov)
+
+#calculate the VIF for each predictor variable in the model
+vif(model_all)
+
+# Based off these values, there is not multicollinearity, so all variables can be used in the model
+```
+
+**Check class of variables**
+```{r}
+class(all.cov$use)
+class(all.cov$landcvr)
+class(all.cov$dis2str)
+class(all.cov$prc_bl_)
+```
+
+**Scale the continuous variables in order for the model to run more efficiently**
+```{r}
+# Step 1: Identify the columns to scale
+columns_to_scale <- c("dis2str", "prc_bl_", "HR_perc_dev")
+
+# Step 2: Subset the data frame
+df_subset <- all.cov[, columns_to_scale]
+
+# Step 3: Apply scale() to the subsetted data
+scaled_data <- scale(df_subset, center = TRUE, scale = TRUE) 
+
+# Step 4: Replace the original columns with scaled values
+all.cov[, columns_to_scale] <- scaled_data
+```
+
+**Check all data to ensure that they are the correct classes and examine the data in the columns**
+```{r}
+head(all.cov)
+
+# Column br_nmbr
+class(all.cov$br_nmbr)
+all.cov$br_nmbr <- as.factor(all.cov$br_nmbr)
+levels(all.cov$br_nmbr)
+
+# Column year
+class(all.cov$year)
+all.cov$year <- as.factor(all.cov$year)
+levels(all.cov$year)
+
+# Column cb_stts
+class(all.cov$cb_stts)
+all.cov$cb_stts <- as.factor(all.cov$cb_stts)
+levels(all.cov$cb_stts)
+
+# Column season
+class(all.cov$season)
+all.cov$season <- as.factor(all.cov$season)
+levels(all.cov$season)
+
+# Column landcvr
+class(all.cov$landcvr)
+levels(all.cov$landcvr)
+
+# Column dis2str
+class(all.cov$dis2str)
+
+# Column prc_bl_
+class(all.cov$prc_bl_)
+
+# Column HR_perc_dev
+class(all.cov$HR_perc_dev)
+
+# Column use
+class(all.cov$use)
+
+
+# Remove the 'geometry' column from the data frame
+all.cov <- all.cov[, -which(names(all.cov) == "geometry")]
+head(all.cov)
+```
+
+**Run a base model** to be able to compare model fit with different iterations of models with interactions. Use is the response variable, 0 is the intercept (used here to mean no selection). The fixed effects in the models included land cover, distance to nearest structure, and percent building structure area within a buffered point. Bear number is a random effect to account for variability of behavior among different bears. The family is binomial because the response variable (use) is either 1 or 0.
+
+```{r}
+library(lme4)
+# Create a glmerControl object with increased tolerance
+control <- glmerControl(optimizer = "Nelder_Mead", optCtrl = list(tol = 0.005))
+```
+
+
+**Run multiple models with different interactions between fixed effects and reproductive status (criterion variable).**
+```{r}
+library(lme4)
+# GLM with reproductive status
+model_1.1 <- glmer(use ~ 0 + landcvr * cb_stts + (1 | br_nmbr), family = binomial, data = all.cov, control = control)
+model_1.2 <- glmer(use ~ 0 + landcvr * cb_stts + dis2str * cb_stts + (1 | br_nmbr), family = binomial, data = all.cov, control = control)
+model_1.3 <- glmer(use ~ 0 + landcvr * cb_stts + dis2str * cb_stts + prc_bl_ * cb_stts + (1 | br_nmbr), family = binomial, data = all.cov, control = control)
+```
+
+**Look at different Akaike’s Information Criterion (AIC) values** to see which models best fit the data.The model with the lowest AIC indicates the model best fit for the data. The delta AIC is a measure of fit of each model compared to the best fit model with a measurement of 0 indicating the model of best fit. In this case, model 1.3 is the best fit.
+```{r}
+library(AICcmodavg)
+
+#define list of models
+models_repro_status <- list(model_1.1, model_1.2, model_1.3)
+
+#specify model names
+mod.names.repro.status <- c("1.1", "1.2", "1.3")
+
+#calculate AIC of each model
+aictab(cand.set = models_repro_status, modnames = mod.names.repro.status)
+```
+
+**Save the model**
+```{r}
+setwd("C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data/Models")
+
+# Save the model to an RDS file
+saveRDS(model_1.3, file = "model_1.3.rds")
+```
+
+### Final Model
+
+
+The RSF provides selection estimates that gave information on the change in selection for the predictor values. The selection estimates give the log-odds or selection change for every unit of change of the response variable. The odds ratio is used to compare the odds of habitat attributes being selected based on different variables. An odds ratio close to zero indicates zero selection behavior with use being proportional to availability. If the odds ratio is negative, there is selection against a particular habitat attribute. If the odds ratio is positive, there is selection for a particular habitat attribute. 
+
+
+**Set Paths**
+Set the path pick the file folder to pull in your data. It will be different based on where your data is stored
+```{r}
+path.models <-"C:/Users/jessi/University of Massachusetts/Jessica-BearProject - General/Final Data/Models"
+```
+
+**Pull in the model**
+```{r}
+setwd(path.models)
+# Load the model back from the RDS file
+model_1 <- readRDS("model_1.3.rds")
+```
+
+**Summarize the model**
+```{r}
+model_1_summary <- summary(model_1)
+print(model_1_summary)
 ```
