@@ -1,8 +1,7 @@
 ---
 title: "Resource Selection Function Guide"
 author: "Jessica Bonin"
-date: "2023-04-24"
-output: html_document
+date: '2023'
 ---
 
 ```{r setup, include=FALSE}
